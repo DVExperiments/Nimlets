@@ -1,0 +1,1126 @@
+{
+ "world_time": 1791873538.8397348,
+ "paused": true,
+ "speed_idx": 3,
+ "sound": true,
+ "started": "2026-10-12",
+ "creature": {
+  "name": "Sorabu",
+  "generation": 1,
+  "genome": {
+   "hue": 21.030877678067867,
+   "sat": 0.4677744183480016,
+   "marking": "spots",
+   "marking_hue": 168.8180039510357,
+   "tendencies": {
+    "playfulness": 0.5483138308808104,
+    "sociability": 0.5463900840103502,
+    "curiosity": 0.3883896816634559,
+    "independence": 0.3596980479468275,
+    "stubbornness": 0.4742437451800725
+   },
+   "mutation": null,
+   "bmut": null,
+   "line": "land"
+  },
+  "species": "scruff",
+  "stage": "teen",
+  "age": 111283.20000000189,
+  "stage_age": 16019.399999999783,
+  "hunger": 14.46799999999943,
+  "happiness": 0.0,
+  "energy": 35.76083333332687,
+  "hygiene": 96.4324999999996,
+  "health": 100,
+  "weight": 25,
+  "discipline": 0.0,
+  "care_mistakes": 6,
+  "stage_mistakes": 2,
+  "sick": false,
+  "doses": 0,
+  "poops": 0,
+  "asleep": false,
+  "napping": false,
+  "lights_on": true,
+  "attention": "bored",
+  "attention_time": 1022.3999999999992,
+  "attention_counted": true,
+  "poop_timer": 0.4053513375849025,
+  "hist": {
+   "hunger": 153.37321816666335,
+   "happy": 33.53351247222374,
+   "weight": 111.24583333333398,
+   "hours": 4.449833333333305
+  },
+  "stats": {
+   "meals": 5,
+   "snacks": 0,
+   "games": 1,
+   "wins": 1,
+   "cleans": 6,
+   "medicine": 0,
+   "praises": 0,
+   "scolds": 0,
+   "pets": 3
+  },
+  "forms": [
+   "pipling",
+   "bobbit",
+   "scruff"
+  ],
+  "elder": false,
+  "departed": false,
+  "offline_neglect": false,
+  "born_at": 1791762255.63965,
+  "quirks": [
+   {
+    "id": "sleepyhead",
+    "from": "baby"
+   },
+   {
+    "id": "shy",
+    "from": "child"
+   },
+   {
+    "id": "explorer",
+    "from": "teen"
+   }
+  ],
+  "routine": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   1.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   1.9300000000000002,
+   1.0,
+   1.0,
+   0.93,
+   0.0,
+   1.9300000000000002,
+   0.93,
+   0.93,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "routine_mark": "810686-18",
+  "routine_day": 810686,
+  "wariness": 0.9988300000000001,
+  "assoc": {
+   "medicine": 0.0,
+   "food": 0.9971599999998988,
+   "ball": 0.1676533333333322
+  },
+  "last_gift_age": 0.0,
+  "beliefs": {
+   "cursor_food": {
+    "v": 0.4722680832,
+    "n": 5,
+    "a": "pos"
+   },
+   "touch": {
+    "v": 0.227196672,
+    "n": 6,
+    "a": null
+   },
+   "bed_safe": {
+    "v": 0.2,
+    "n": 1,
+    "a": null
+   },
+   "toy_fun": {
+    "v": 0.1432,
+    "n": 2,
+    "a": null
+   },
+   "objects_respond": {
+    "v": 0.27749999999999997,
+    "n": 2,
+    "a": null
+   },
+   "room_edge": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "edge_passable": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "bowl_summons": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "time_control": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "pause_button": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   }
+  },
+  "signals": {
+   "style": "gesture",
+   "assoc": {},
+   "learned": {},
+   "responses": {}
+  },
+  "frontier": {
+   "stage": 0,
+   "progress": 0,
+   "escapes": 0,
+   "roams": 0
+  },
+  "bmut_active": false,
+  "ritual": [
+   "sit",
+   "jump",
+   "dance"
+  ],
+  "ritual_day": 810685,
+  "firsts": [
+   "sig:chirp1:food",
+   "first_player_gesture",
+   "misunderstanding",
+   "ritual",
+   "sig:coo+look:food",
+   "sig:coo+approach:attention",
+   "sig:chirp2:food"
+  ],
+  "bond": {
+   "lang": {
+    "style": "vocal",
+    "repertoire": {
+     "food": [
+      "chirp1",
+      "chirp2",
+      "coo+look",
+      "spin+push",
+      "wiggle+tap"
+     ],
+     "play": [
+      "chirp2+tap",
+      "coo",
+      "front+look",
+      "point",
+      "trill"
+     ],
+     "attention": [
+      "approach",
+      "chirp1+hop",
+      "coo+approach",
+      "spin+look",
+      "trill"
+     ],
+     "draw": [
+      "chirp1",
+      "chirp1+look",
+      "coo",
+      "tap",
+      "trill"
+     ]
+    },
+    "stats": {
+     "food": {
+      "chirp1": {
+       "n": 2.91,
+       "s": 0.8492533190558823,
+       "m": 1
+      },
+      "chirp2": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo+look": {
+       "n": 3.0,
+       "s": 0.8849625107319404,
+       "m": 2
+      },
+      "spin+push": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "wiggle+tap": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     },
+     "play": {
+      "chirp2+tap": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "front+look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "point": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "trill": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     },
+     "attention": {
+      "approach": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "chirp1+hop": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo+approach": {
+       "n": 1.0,
+       "s": 0.9799500143092539,
+       "m": 0
+      },
+      "spin+look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "trill": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     },
+     "draw": {
+      "chirp1": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "chirp1+look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "tap": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "trill": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     }
+    },
+    "conventions": {},
+    "history": {},
+    "last": null
+   },
+   "gest": {
+    "left": {
+     "seen": 0,
+     "ok": 0
+    },
+    "right": {
+     "seen": 0,
+     "ok": 0
+    },
+    "side": {
+     "seen": 0,
+     "ok": 0
+    },
+    "circle": {
+     "seen": 0,
+     "ok": 0
+    },
+    "up": {
+     "seen": 0,
+     "ok": 0
+    },
+    "down": {
+     "seen": 0,
+     "ok": 0
+    },
+    "wiggle": {
+     "seen": 0,
+     "ok": 0
+    }
+   },
+   "games": {
+    "lead": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.519,
+     "today": 0
+    },
+    "catch": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.672,
+     "today": 0
+    },
+    "echo": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.81,
+     "today": 0
+    },
+    "path": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.653,
+     "today": 0
+    }
+   },
+   "rituals": {
+    "return": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    },
+    "feed": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    },
+    "bedtime": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    },
+    "play": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    }
+   },
+   "player": {
+    "imitates": 0.0,
+    "sound": 0.252,
+    "gesture": 0.0,
+    "ball": 0.19,
+    "draws": 0.0,
+    "alone": -0.127,
+    "respects": -0.168,
+    "quick": 0.12
+   },
+   "player_gestures": {
+    "down": 1,
+    "right": 1,
+    "side": 1
+   },
+   "styles": {},
+   "memories": [
+    {
+     "key": "repaired",
+     "text": "A misunderstanding was repaired: Sorabu wanted food, and you worked it out.",
+     "wt": 1791783027.6396728
+    }
+   ],
+   "daily": [
+    [
+     810685,
+     3,
+     1.0
+    ]
+   ],
+   "today": {
+    "day": 810686,
+    "attempts": 4,
+    "successes": 2.0
+   },
+   "streak": {
+    "intent": null,
+    "n": 0
+   },
+   "collab": 0,
+   "last_decision": "Wanted food because it was getting hungry; chose its best guess (50% expected)."
+  },
+  "observer": {
+   "zones": {
+    "shell": 60,
+    "lights": 8,
+    "room": 52,
+    "room:ball": 8,
+    "room:pet": 9,
+    "discipline": 13,
+    "status": 1,
+    "records": 1,
+    "room:wall": 9,
+    "medicine": 14,
+    "clean": 16,
+    "play": 10,
+    "feed": 9,
+    "room:bed": 6,
+    "hearts": 1,
+    "room:plant": 3,
+    "room:bowl": 1,
+    "room:window": 1,
+    "speed": 1,
+    "pause": 2
+   },
+   "trans": {
+    "shell": {
+     "lights": 5,
+     "room": 18,
+     "discipline": 8,
+     "records": 1,
+     "feed": 5,
+     "play": 4,
+     "clean": 10,
+     "medicine": 5,
+     "hearts": 1,
+     "room:ball": 1,
+     "speed": 1,
+     "pause": 1
+    },
+    "lights": {
+     "shell": 4,
+     "status": 1,
+     "discipline": 3
+    },
+    "room": {
+     "room:ball": 5,
+     "room:pet": 9,
+     "shell": 20,
+     "room:wall": 9,
+     "room:bed": 6,
+     "room:plant": 2,
+     "room:window": 1
+    },
+    "room:ball": {
+     "room": 6,
+     "room:plant": 1,
+     "room:bowl": 1
+    },
+    "room:pet": {
+     "room": 6,
+     "shell": 2,
+     "room:ball": 1
+    },
+    "discipline": {
+     "lights": 3,
+     "medicine": 5,
+     "shell": 5
+    },
+    "status": {
+     "shell": 1
+    },
+    "records": {
+     "room": 1
+    },
+    "room:wall": {
+     "room": 8,
+     "shell": 1
+    },
+    "medicine": {
+     "clean": 5,
+     "discipline": 2,
+     "shell": 7
+    },
+    "clean": {
+     "medicine": 3,
+     "play": 4,
+     "shell": 9
+    },
+    "play": {
+     "shell": 4,
+     "feed": 4,
+     "clean": 1,
+     "medicine": 1
+    },
+    "feed": {
+     "room": 6,
+     "play": 2,
+     "shell": 1
+    },
+    "room:bed": {
+     "room": 5,
+     "shell": 1
+    },
+    "hearts": {
+     "shell": 1
+    },
+    "room:plant": {
+     "room:ball": 1,
+     "shell": 1,
+     "room": 1
+    },
+    "room:bowl": {
+     "room": 1
+    },
+    "room:window": {
+     "shell": 1
+    },
+    "speed": {
+     "shell": 1
+    }
+   },
+   "assoc": {
+    "z:room:pet": {
+     "pet": 2.7
+    },
+    "zz:room>room:pet": {
+     "pet": 2.7
+    },
+    "to:medicine": {
+     "pet": 0.85,
+     "feed": 0.85,
+     "clean": 1
+    },
+    "z:records": {
+     "records": 0.85
+    },
+    "zz:shell>records": {
+     "records": 0.85
+    },
+    "z:clean": {
+     "clean": 5.7
+    },
+    "zz:medicine>clean": {
+     "clean": 1.85
+    },
+    "to:discipline": {
+     "clean": 0.85,
+     "ball": 1
+    },
+    "z:room:ball": {
+     "ball": 2.85
+    },
+    "zz:room>room:ball": {
+     "ball": 1.85
+    },
+    "to:clean": {
+     "ball": 0.85,
+     "feed": 1,
+     "play": 1,
+     "clean": 2
+    },
+    "z:feed": {
+     "feed": 6.7,
+     "shop": 1
+    },
+    "zz:shell>feed": {
+     "feed": 3.85,
+     "shop": 1
+    },
+    "zz:play>feed": {
+     "feed": 2.85
+    },
+    "to:feed": {
+     "feed": 3.85,
+     "clean": 0.85,
+     "pet": 1
+    },
+    "zz:shell>clean": {
+     "clean": 3.85
+    },
+    "z:lights": {
+     "lights": 1.85
+    },
+    "zz:shell>lights": {
+     "lights": 1.85
+    },
+    "to:lights": {
+     "lights": 0.85,
+     "clean": 1
+    },
+    "z:play": {
+     "play": 1
+    },
+    "zz:clean>play": {
+     "play": 1
+    },
+    "zz:room:pet>room:ball": {
+     "ball": 1
+    },
+    "z:room:plant": {
+     "poke": 1
+    },
+    "zz:room>room:plant": {
+     "poke": 1
+    },
+    "to:speed": {
+     "poke": 1,
+     "pause": 1
+    },
+    "z:pause": {
+     "pause": 2,
+     "records": 2
+    },
+    "zz:shell>pause": {
+     "pause": 1
+    }
+   },
+   "conf": {
+    "feed": 0.52,
+    "clean": 0.543
+   },
+   "hits": 5,
+   "misses": 3,
+   "acc": 0.545,
+   "log": [
+    [
+     1791852203,
+     "feed",
+     0.6,
+     1
+    ],
+    [
+     1791854810,
+     "feed",
+     0.47,
+     1
+    ],
+    [
+     1791858000,
+     "feed",
+     0.54,
+     0
+    ],
+    [
+     1791859081,
+     "clean",
+     0.6,
+     1
+    ],
+    [
+     1791859725,
+     "feed",
+     0.69,
+     1
+    ],
+    [
+     1791868165,
+     "feed",
+     0.54,
+     0
+    ],
+    [
+     1791870970,
+     "clean",
+     0.65,
+     1
+    ],
+    [
+     1791872617,
+     "clean",
+     0.69,
+     0
+    ]
+   ],
+   "stage": 1,
+   "ms": {
+    "encounter": 1791765266.4396544
+   },
+   "speed_seen": 0,
+   "pause_seen": 1,
+   "rapid": 110.05700000000469,
+   "symbols": 0,
+   "studied": 0,
+   "day": 810686
+  },
+  "episodes": [
+   {
+    "key": "gesture:down",
+    "kind": "gesture",
+    "text": "your a flick downward",
+    "imp": 0.6,
+    "strength": 0.685,
+    "n": 1,
+    "first": 1791774169.2396643,
+    "last": 1791774169.2396643,
+    "recalled": 0,
+    "data": {
+     "gesture": "down"
+    }
+   },
+   {
+    "key": "gesture:right",
+    "kind": "gesture",
+    "text": "your a swipe to the right",
+    "imp": 0.6,
+    "strength": 0.685,
+    "n": 1,
+    "first": 1791774489.6396644,
+    "last": 1791774489.6396644,
+    "recalled": 0,
+    "data": {
+     "gesture": "right"
+    }
+   },
+   {
+    "key": "gesture:side",
+    "kind": "gesture",
+    "text": "your a side-to-side sweep",
+    "imp": 0.6,
+    "strength": 0.685,
+    "n": 1,
+    "first": 1791778647.0396683,
+    "last": 1791778647.0396683,
+    "recalled": 0,
+    "data": {
+     "gesture": "side"
+    }
+   },
+   {
+    "key": "mem:repaired",
+    "kind": "communication",
+    "text": "A misunderstanding was repaired: Sorabu wanted food, and you worked it out.",
+    "imp": 0.9,
+    "strength": 0.846,
+    "n": 1,
+    "first": 1791783027.6396728,
+    "last": 1791783027.6396728,
+    "recalled": 0,
+    "data": {}
+   }
+  ],
+  "prituals": {
+   "counts": {
+    "eat": {
+     "chirp>notice": 1.854,
+     "look>hum": 1.97
+    },
+    "sleep": {
+     "chirp>notice": 1
+    },
+    "play": {},
+    "return": {},
+    "signal": {
+     "chirp>notice": 0.941,
+     "look>hum": 0.97,
+     "at:window>window": 1
+    }
+   },
+   "known": {},
+   "occ": {
+    "eat": 5,
+    "sleep": 1,
+    "play": 1,
+    "return": 1,
+    "signal": 3
+   },
+   "day": 810686
+  },
+  "spatial": {
+   "expect": {
+    "bed": 30.0
+   },
+   "pref": {
+    "bed": 30.0
+   },
+   "pref_str": {
+    "bed": 0.35
+   },
+   "adapt": {},
+   "changes": 0
+  },
+  "skills": {},
+  "mirror": {},
+  "uncanny": {},
+  "shop": {
+   "taste": {},
+   "like": {},
+   "uses": {},
+   "days": {},
+   "favourite": null
+  },
+  "personality": {
+   "playfulness": 0.49970527759178984,
+   "sociability": 0.5923056507628589,
+   "curiosity": 0.374687589432837,
+   "independence": 0.5702727473880882,
+   "stubbornness": 0.5066756833007964
+  },
+  "memory": {
+   "food_likes": {
+    "rice": -0.18721025257968346,
+    "fish": 0.5193977161528472,
+    "berries": 0.011320984455695293,
+    "cake": -0.4297817676017529
+   },
+   "food_counts": {
+    "rice": 3,
+    "fish": 2,
+    "berries": 0,
+    "cake": 0
+   },
+   "game_counts": {
+    "higher_lower": 1,
+    "direction": 0,
+    "timing": 0
+   },
+   "game_wins": {
+    "higher_lower": 1,
+    "direction": 0,
+    "timing": 0
+   },
+   "attachment": 6.710450000000041,
+   "lessons": 0,
+   "habits": {},
+   "spots": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "praises": 0,
+   "scolds": 0
+  }
+ },
+ "records": {
+  "discovered": [
+   "pipling",
+   "bobbit",
+   "scruff"
+  ],
+  "lineage": [],
+  "totals": {
+   "meals": 0,
+   "snacks": 0,
+   "games": 0,
+   "wins": 0,
+   "cleans": 0,
+   "medicine": 0,
+   "praises": 0,
+   "scolds": 0,
+   "pets": 0
+  },
+  "longest": null,
+  "rare": [],
+  "gifts": {
+   "flower": 0,
+   "leaf": 0,
+   "drawing": 0,
+   "pebble": 0
+  },
+  "coins": 3,
+  "coins_earned": 3,
+  "coins_spent": 0,
+  "bought": {}
+ },
+ "living": {
+  "gift": null
+ },
+ "world": {
+  "bed_x": 30.0,
+  "ball_x": 76,
+  "ball_in_bowl": false,
+  "pile": {
+   "x": 44.0,
+   "items": []
+  },
+  "mural": [],
+  "mural_artists": {},
+  "inventions": [],
+  "marks": {
+   "left": 0,
+   "right": 0,
+   "glass": 0
+  },
+  "souvenirs": [],
+  "nest": false,
+  "stash": {
+   "x": 151.0,
+   "items": []
+  },
+  "loose": [],
+  "figure": null,
+  "mirror_x": 106.0,
+  "symbols": {},
+  "frame_tilt": 0
+ },
+ "journal": {
+  "entries": [
+   {
+    "id": 1,
+    "kind": "evolve",
+    "text": "The egg hatched into Sorabu the Pipling.",
+    "wt": 1791763839.0396528,
+    "icon": "star",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 2,
+    "kind": "signal",
+    "text": "Sorabu tried one chirp, then looked at you. Was it trying to tell you something?",
+    "wt": 1791767173.239656,
+    "icon": "note",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 3,
+    "kind": "evolve",
+    "text": "Sorabu evolved into Bobbit.",
+    "wt": 1791769280.4396577,
+    "icon": "star",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 4,
+    "kind": "avoid",
+    "text": "Sorabu backed away from your cursor.",
+    "wt": 1791773948.4396641,
+    "icon": "ghost",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 5,
+    "kind": "avoid",
+    "text": "Sorabu was followed after it backed away. It retreated further.",
+    "wt": 1791774309.6396644,
+    "icon": "ghost",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 6,
+    "kind": "bond",
+    "text": "Sorabu tried to tell you something, but it wasn't to play. It shook its head and tried again.",
+    "wt": 1791779253.6396697,
+    "icon": "note",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 7,
+    "kind": "avoid",
+    "text": "Sorabu backed away from your cursor.",
+    "wt": 1791781299.0396707,
+    "icon": "ghost",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 8,
+    "kind": "bond",
+    "text": "A misunderstanding was repaired: Sorabu wanted food, and you worked it out.",
+    "wt": 1791783027.6396728,
+    "icon": "heart",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 9,
+    "kind": "ritual",
+    "text": "Sorabu did its little bedtime ritual: sit, jump, dance.",
+    "wt": 1791788423.4396763,
+    "icon": "moon",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 10,
+    "kind": "signal",
+    "text": "Sorabu tried a soft coo + a look at the bowl, then looked at you. Was it trying to tell you something?",
+    "wt": 1791848334.639721,
+    "icon": "note",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 11,
+    "kind": "belief",
+    "text": "Sorabu seems to expect food when your cursor goes near the Feed button.",
+    "wt": 1791855372.0397248,
+    "icon": "belief",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 12,
+    "kind": "evolve",
+    "text": "Sorabu evolved into Scruff.",
+    "wt": 1791857519.4397266,
+    "icon": "star",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 13,
+    "kind": "signal",
+    "text": "Sorabu tried a soft coo + coming toward you, then looked at you. Was it trying to tell you something?",
+    "wt": 1791860229.0397289,
+    "icon": "note",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 14,
+    "kind": "avoid",
+    "text": "Sorabu backed away from your cursor.",
+    "wt": 1791866904.639732,
+    "icon": "ghost",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 15,
+    "kind": "avoid",
+    "text": "Sorabu was followed after it backed away. It retreated further.",
+    "wt": 1791868044.639732,
+    "icon": "ghost",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 16,
+    "kind": "signal",
+    "text": "Sorabu tried two chirps, then looked at you. Was it trying to tell you something?",
+    "wt": 1791869185.839732,
+    "icon": "note",
+    "n": 1,
+    "important": false
+   }
+  ],
+  "next_id": 17,
+  "seen_id": 17
+ },
+ "version": 1,
+ "saved_at": 1791763214.4967773
+}

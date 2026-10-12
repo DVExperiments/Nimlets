@@ -1,0 +1,320 @@
+{
+ "world_time": 1791762569.096504,
+ "paused": false,
+ "speed_idx": 0,
+ "sound": true,
+ "started": "2026-10-12",
+ "creature": {
+  "name": "Tata",
+  "generation": 1,
+  "genome": {
+   "hue": 289.9381231412197,
+   "sat": 0.4583168245600136,
+   "marking": "stripes",
+   "marking_hue": 138.45883241565537,
+   "tendencies": {
+    "playfulness": 0.6384056951148741,
+    "sociability": 0.45194694242641115,
+    "curiosity": 0.30679682031587313,
+    "independence": 0.3291848192793619,
+    "stubbornness": 0.47063135136984857
+   },
+   "mutation": null,
+   "bmut": null,
+   "line": "water"
+  },
+  "species": "egg",
+  "stage": "egg",
+  "age": 1.8579999999999999,
+  "stage_age": 1.8579999999999999,
+  "hunger": 80.0,
+  "happiness": 80.0,
+  "energy": 100.0,
+  "hygiene": 100.0,
+  "health": 100.0,
+  "weight": 5.0,
+  "discipline": 0.0,
+  "care_mistakes": 0,
+  "stage_mistakes": 0,
+  "sick": false,
+  "doses": 0,
+  "poops": 0,
+  "asleep": false,
+  "napping": false,
+  "lights_on": true,
+  "attention": null,
+  "attention_time": 0.0,
+  "attention_counted": false,
+  "poop_timer": 0.0,
+  "hist": {
+   "hunger": 0.0,
+   "happy": 0.0,
+   "weight": 0.0,
+   "hours": 0.0
+  },
+  "stats": {
+   "meals": 0,
+   "snacks": 0,
+   "games": 0,
+   "wins": 0,
+   "cleans": 0,
+   "medicine": 0,
+   "praises": 0,
+   "scolds": 0,
+   "pets": 0
+  },
+  "forms": [],
+  "elder": false,
+  "departed": false,
+  "offline_neglect": false,
+  "born_at": 1791762567.2385063,
+  "quirks": [
+   {
+    "id": "showoff",
+    "from": "baby"
+   },
+   {
+    "id": "independent",
+    "from": "child"
+   },
+   {
+    "id": "troublemaker",
+    "from": "teen"
+   }
+  ],
+  "routine": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "routine_mark": "",
+  "routine_day": 0,
+  "wariness": 0.0,
+  "assoc": {
+   "medicine": 0.0,
+   "food": 0.0,
+   "ball": 0.0
+  },
+  "last_gift_age": 0.0,
+  "beliefs": {
+   "cursor_food": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "touch": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "bed_safe": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "toy_fun": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "objects_respond": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "room_edge": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "edge_passable": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "bowl_summons": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "time_control": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "pause_button": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   }
+  },
+  "signals": {
+   "style": "gesture",
+   "assoc": {},
+   "learned": {},
+   "responses": {}
+  },
+  "frontier": {
+   "stage": 0,
+   "progress": 0,
+   "escapes": 0,
+   "roams": 0
+  },
+  "bmut_active": false,
+  "ritual": [
+   "jump",
+   "sit"
+  ],
+  "ritual_day": -1,
+  "firsts": [],
+  "bond": {},
+  "observer": {},
+  "episodes": [],
+  "prituals": {},
+  "spatial": {
+   "expect": {
+    "bed": 30.0
+   },
+   "pref": {},
+   "pref_str": {},
+   "adapt": {},
+   "changes": 0
+  },
+  "skills": {},
+  "mirror": {},
+  "uncanny": {},
+  "shop": {},
+  "personality": {
+   "playfulness": 0.6308350178760231,
+   "sociability": 0.3946327364699365,
+   "curiosity": 0.2626168214371796,
+   "independence": 0.4247234144774549,
+   "stubbornness": 0.4938179057732821
+  },
+  "memory": {
+   "food_likes": {
+    "rice": -0.4903880187493719,
+    "fish": 0.45913699546755593,
+    "berries": -0.007933748610658764,
+    "cake": -0.05277591133173387
+   },
+   "food_counts": {
+    "rice": 0,
+    "fish": 0,
+    "berries": 0,
+    "cake": 0
+   },
+   "game_counts": {
+    "higher_lower": 0,
+    "direction": 0,
+    "timing": 0
+   },
+   "game_wins": {
+    "higher_lower": 0,
+    "direction": 0,
+    "timing": 0
+   },
+   "attachment": 20.0,
+   "lessons": 0,
+   "habits": {},
+   "spots": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "praises": 0,
+   "scolds": 0
+  }
+ },
+ "records": {
+  "discovered": [],
+  "lineage": [],
+  "totals": {
+   "meals": 0,
+   "snacks": 0,
+   "games": 0,
+   "wins": 0,
+   "cleans": 0,
+   "medicine": 0,
+   "praises": 0,
+   "scolds": 0,
+   "pets": 0
+  },
+  "longest": null,
+  "rare": [],
+  "gifts": {
+   "flower": 0,
+   "leaf": 0,
+   "drawing": 0,
+   "pebble": 0
+  },
+  "coins": 0,
+  "coins_earned": 0,
+  "coins_spent": 0,
+  "bought": {}
+ },
+ "living": {
+  "gift": null
+ },
+ "world": {
+  "bed_x": 30.0,
+  "ball_x": 100.0,
+  "ball_in_bowl": false,
+  "pile": {
+   "x": 44.0,
+   "items": []
+  },
+  "mural": [],
+  "mural_artists": {},
+  "inventions": [],
+  "marks": {
+   "left": 0,
+   "right": 0,
+   "glass": 0
+  },
+  "souvenirs": [],
+  "nest": false,
+  "stash": {
+   "x": 151.0,
+   "items": []
+  },
+  "loose": [],
+  "figure": null,
+  "mirror_x": 106.0,
+  "symbols": {},
+  "frame_tilt": 0
+ },
+ "journal": {
+  "entries": [],
+  "next_id": 1,
+  "seen_id": 1
+ },
+ "version": 1,
+ "saved_at": 1791762569.0451353
+}
