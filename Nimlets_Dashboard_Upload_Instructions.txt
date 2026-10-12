@@ -1,0 +1,14 @@
+NIMLETS DASHBOARD IMAGE FIX
+
+Upload these two files to the Nimlets GitHub repository, preserving the folder paths:
+
+  dv-project.json
+  assets/nimlets-cover.svg
+
+The JSON includes:
+  "cover": "assets/nimlets-cover.svg"
+  "imageAlt": "Nimlets ..."
+
+The image path is relative to the Nimlets GitHub repository root, not the DV Experiments dashboard repository. Commit both files to your default branch. Refresh the dashboard after GitHub caching.
+
+If you prefer an actual game screenshot, upload assets/nimlets-screenshot.png and change the cover field to "assets/nimlets-screenshot.png".
