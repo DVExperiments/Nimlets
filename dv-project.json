@@ -4,7 +4,7 @@
   "description": "Nimlets is a retro-inspired virtual pet game and artificial-life experiment. Hatch and care for a Nimlet, watch it develop its own personality, habits and memories, and discover how a small simulated creature can begin to feel surprisingly alive.",
   "category": "Games",
   "platform": "Python / pygame-ce / Windows desktop",
-  "cover": "assets/nimlets-cover.svg",
+  "cover": "assets/nimlets-cover.png",
   "imageAlt": "Nimlets pixel-art-inspired virtual pet displayed inside a retro digital companion, representing an artificial-life experiment",
   "overview": [
     "Nimlets reimagines the simplicity of classic virtual pets. Hatch an egg, feed your Nimlet, play short mini-games, clean its room, care for its health and help it rest. The experience is designed for quick visits rather than complicated management, with one creature at the centre of the screen.",
