@@ -1,0 +1,49 @@
+{
+  "title": "Nimlets",
+  "tagline": "Little lives. Big questions.",
+  "description": "Nimlets is a retro-inspired virtual pet game and artificial-life experiment. Hatch and care for a Nimlet, watch it develop its own personality, habits and memories, and discover how a small simulated creature can begin to feel surprisingly alive.",
+  "category": "Games",
+  "platform": "Python / pygame-ce / Windows desktop",
+  "overview": [
+    "Nimlets reimagines the simplicity of classic virtual pets. Hatch an egg, feed your Nimlet, play short mini-games, clean its room, care for its health and help it rest. The experience is designed for quick visits rather than complicated management, with one creature at the centre of the screen.",
+    "Each Nimlet has its own personality, preferences and habits. It can wander around its room, investigate familiar objects, interact with its bed, bowl and toy, respond to the cursor, and occasionally seek or avoid attention. Small memories and autonomous behaviours are intended to make the relationship feel personal rather than purely button-driven.",
+    "Nimlets grow through egg, baby, child, teen and adult stages, branching into different forms depending on care and development. Colours are randomised at hatching, while later generations and a collection of discovered forms encourage replayability. Real-time ageing, offline progression and adjustable time-speed controls let players experience the lifecycle at their own pace.",
+    "Beyond its everyday care loop, Nimlets is an ongoing exploration of artificial life and reciprocal interaction: what happens when a digital creature remembers the player, develops communication signals, experiments with its environment or initiates activities of its own? The project uses these ideas to invite questions about learning, agency, identity and what makes something appear alive."
+  ],
+  "highlights": [
+    "Original pixel-art virtual pets with distinct life stages, expressions and animated behaviours",
+    "Simple care actions including feeding, playing, cleaning, medicine, training and sleep",
+    "Autonomous wandering, resting, curiosity and interactions with room objects such as a bed, bowl and toy",
+    "Cursor awareness, petting reactions, return greetings and occasional independent surprises",
+    "Hidden personality traits, favourite activities, simple memories and changing habits",
+    "Branching evolution paths, rare adult forms and individual colours randomised when an egg hatches",
+    "New generations, inherited tendencies, evolution records and a creature discovery collection",
+    "Three short mini-games with multi-round challenges and gameplay consequences",
+    "Customisable interface colour themes, pet reset and main-screen time acceleration",
+    "Automatic local saves, JSON persistence and capped offline time progression",
+    "An expanding artificial-life direction exploring communication, player prediction, experimentation and creature-led interactions",
+    "Lightweight offline Windows desktop application built in Python with pygame-ce"
+  ],
+  "tags": [
+    "Virtual Pet",
+    "Artificial Life",
+    "Simulation",
+    "Game",
+    "Pixel Art",
+    "Autonomous Behaviour",
+    "Emergent Behaviour",
+    "Personality",
+    "Evolution",
+    "Generations",
+    "Memory",
+    "Human-Computer Interaction",
+    "Experimental Game Design",
+    "Python",
+    "pygame-ce",
+    "Windows",
+    "Desktop"
+  ],
+  "featured": false,
+  "visible": true,
+  "notice": "Nimlets is a Python/pygame-ce Windows desktop project, not a browser-playable game. Python and the required dependencies are needed to run the source version. Features involving deeper reciprocal learning, self-directed experiments and awareness of simulation boundaries are ongoing development goals and may not be available in every build. Creature behaviour is simulated; it is not evidence of consciousness."
+}
