@@ -1,5 +1,5 @@
 """Tests for the artificial-life layer: world, diary, beliefs, signals,
-anomalies, creations, the frontier, escape trips, desktop roaming and
+anomalies, creations, the frontier, escape trips, wandering the device and
 the new UI pieces.  Run:  python -m unittest discover -s tests -v
 """
 import json
@@ -240,19 +240,38 @@ class FrontierTests(unittest.TestCase):
             self.assertIsNone(g.trip)
             pygame.quit()
 
-    def test_roam_companion_runs_headless(self):
-        from game.roam import run as roam_run
-        rng = random.Random(1)
+    def test_wander_tours_the_device_and_never_leaves_the_window(self):
+        import pygame
+        from game.app import Game
         with tempfile.TemporaryDirectory() as d:
-            cfg = {"species": "frolicat", "genome": genetics.random_genome(rng), "elder": False,
-                   "name": "Ari", "rect": [100, 100, 900, 700], "duration": 1,
-                   "result": os.path.join(d, "r.json")}
-            path = os.path.join(d, "c.json")
-            with open(path, "w") as f:
-                json.dump(cfg, f)
-            res = roam_run(path, max_frames=90)
-            self.assertIn("souvenir", res)
-            self.assertTrue(os.path.exists(cfg["result"]))
+            g = Game(["--save", os.path.join(d, "s.json"), "--mute", "--seed", "2"])
+            for _ in range(30 * 30):
+                if g.c.stage == "adult" and not g.blocked():
+                    break
+                if not g.blocked():
+                    g.c.stage_age = 1e9
+                g.update(1 / 30)
+            g.c.asleep = False
+            g.draw()
+            g.start_trip(True)
+            visited = set()
+            W, H = g.L.W, g.L.H
+            for _ in range(30 * 120):
+                if not g.trip:
+                    break
+                step = g.trip.steps[g.trip.i]
+                visited.add(step["at"][0])
+                g.update(1 / 30)
+                if g.trip and g.trip.pos:
+                    x, y = g.trip.pos
+                    self.assertTrue(0 <= x <= W and 0 <= y <= H, (x, y))     # stays inside the app
+                g.draw()
+            self.assertIsNone(g.trip)
+            self.assertTrue({"abc", "msg", "tabtop", "tabside", "hearts", "clock"} <= visited)
+            self.assertEqual(g.c.frontier["roams"], 1)
+            self.assertTrue(g.world.souvenirs)
+            self.assertTrue(any("wander around the whole device" in e["text"] for e in g.journal.entries))
+            pygame.quit()
 
 
 class AppFeatureTests(unittest.TestCase):
@@ -299,10 +318,17 @@ class AppFeatureTests(unittest.TestCase):
             pygame.quit()
             with open(save) as f:
                 data = json.load(f)
-            data["saved_at"] -= 8 * 3600
+            # an 8-hour absence ending at 6 pm today, so it's always daytime and the pet is up and
+            # about (it used to end "now", and overnight absences were sometimes all sleep)
+            import time as _t
+            from unittest import mock
+            lt = _t.localtime()
+            back = _t.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 18, 0, 0, 0, 0, -1))
+            data["saved_at"] = data["world_time"] = back - 8 * 3600
             with open(save, "w") as f:
                 json.dump(data, f)
-            g2 = Game(["--save", save, "--mute", "--seed", "3"])
+            with mock.patch("time.time", return_value=back):
+                g2 = Game(["--save", save, "--mute", "--seed", "3"])
             self.assertTrue(g2.journal.unseen())
             self.assertEqual(g2.panel, "away")
             g2.draw()

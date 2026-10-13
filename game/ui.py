@@ -1137,7 +1137,7 @@ class UI:
         # light / dark
         self.text(screen, "Appearance", (x, y + 6), fs + 1, t.ink, bold=True)
         lf = self.font(fs + 1, True)
-        bx = x + max(int(fs * 9), max(lf.size(n)[0] for n in ("Appearance", "Shell", "Desktop roaming",
+        bx = x + max(int(fs * 9), max(lf.size(n)[0] for n in ("Appearance", "Shell", "Wandering",
                                                                    "Experiments", "Reset")) + 18)
         bw = max(fs * 5, 90)
         light = pygame.Rect(bx, y, bw, fs + 18)
@@ -1163,16 +1163,14 @@ class UI:
                       maxw=rect.right - shl.right - 40)
         y += gap
 
-        # desktop roaming (opt-in, Windows only)
-        self.text(screen, "Desktop roaming", (x, y + 6), fs + 1, t.ink, bold=True)
+        # wandering: may the pet take long walks around the whole device?
+        self.text(screen, "Wandering", (x, y + 6), fs + 1, t.ink, bold=True)
         roam = pygame.Rect(bx, y, bw * 2 + 10, fs + 18)
-        supported = prefs.get("_roam_supported", False)
-        label = ("Allowed" if prefs.get("roam") else "Not allowed") if supported else "Windows only"
-        self.pill_button(screen, roam, label, fs - 1, on=bool(prefs.get("roam")) and supported,
-                         enabled=supported)
-        self.hit["roam_btn"] = roam if supported else None
+        on = prefs.get("wander", True)
+        self.pill_button(screen, roam, "Allowed" if on else "Not allowed", fs - 1, on=on)
+        self.hit["roam_btn"] = roam
         if roam.right + 20 < rect.right - 200:
-            self.text(screen, "Lets your pet wander onto your desktop now and then.",
+            self.text(screen, "Lets your pet explore the whole device now and then.",
                       (roam.right + 14, y + 8), fs - 4, t.ink_soft, maxw=rect.right - roam.right - 40)
         y += gap
 
@@ -1208,7 +1206,11 @@ class UI:
         self.hit["reset_soft"], self.hit["reset_hard"] = soft, hard
         hint_y = max(hard.bottom, soft.bottom) + 14
         if hint_y < rect.bottom - fs * 3 and rect.h > 520:
-            self.text(screen, "A backup of your save is always kept in the saves folder.",
+            fb = pygame.Rect(0, 0, self.font(fs - 2, True).size("Open folder")[0] + 28, fs + 14)
+            fb.topright = (rect.right - 22, y - 4)
+            self.pill_button(screen, fb, "Open folder", fs - 2)
+            self.hit["folder_btn"] = fb
+            self.text(screen, "Saves, backups and exported reports live in your Nimlets folder.",
                       (x, hint_y), fs - 4, t.ink_soft)
         self.text(screen, "Keys: O settings, Left/Right theme, D dark mode, Esc close",
                   (rect.centerx, rect.bottom - fs - 10), fs - 4, t.ink_soft, align="center")

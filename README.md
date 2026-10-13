@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 1.9.0 "Pixel Perfect"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 2.0.0 "Build Ready"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -18,11 +18,25 @@ pip install -r requirements.txt   # installs pygame-ce
 python main.py
 ```
 
-**Testing mode:** double-click `run_test_mode.bat` (600× speed, separate save file in `saves/test_save.json`) or run `python main.py --speed 600`. At 600×, the egg hatches in a fraction of a second and the baby stage lasts six seconds; a full lifecycle takes around 30 real minutes. Press **T** in-game to cycle 1× / 10× / 60× / 600× / 3600×.
+**Testing mode:** double-click `run_test_mode.bat` (600× speed, with its own separate `test_save.json`) or run `python main.py --speed 600 --test-save`. At 600×, the egg hatches in a fraction of a second and the baby stage lasts six seconds; a full lifecycle takes around 30 real minutes. Press **T** in-game to cycle 1× / 10× / 60× / 600× / 3600×.
 
 Other options: `--reset` (fresh game; the old save is backed up), `--mute`, `--save PATH`.
 
-Optional standalone `.exe`: `pip install pyinstaller`, then `pyinstaller --onefile --windowed --add-data "config;config" main.py`. Untested; see Known limitations.
+**Where your saves live.** Saves, preferences, backups and exported reports are kept in your own **Nimlets folder**, not the game folder, so they survive updates and reinstalls:
+- Windows: `%APPDATA%\Nimlets`
+- macOS: `~/Library/Application Support/Nimlets`
+- Linux: `~/.local/share/Nimlets`
+
+**Settings → Open folder** takes you there. The first time v2.0 or later runs, it *copies* any saves from the old `saves` folder inside the game folder (the originals are left where they were). Set `NIMLETS_DATA_DIR` to use a different folder, for example a portable copy on a USB stick.
+
+## Building the standalone game (Nimlets.exe)
+
+Players don't need Python: they just run **Nimlets.exe**. There are two ways to build it, and both use the same script, `tools/build_exe.py`, which runs the tests, draws the icon, builds a single-file game with PyInstaller, test-runs the result, and zips it with a short read-me for players.
+
+- **On your PC:** double-click **`build_exe.bat`**. It installs pygame-ce and PyInstaller if needed, builds, and opens the `dist` folder with `Nimlets.exe` and `Nimlets-vX.Y.Z-windows.zip`.
+- **On GitHub:** publish a **Release** and GitHub builds the .exe on its own Windows machines and attaches the zip to that release, usually within ten minutes. You can also build on demand from the **Actions** tab (*Build Windows .exe* → *Run workflow*) and download it from the run's *Artifacts*. The recipe is `.github/workflows/build-windows.yml`.
+
+If any test fails, no build is made. Always change the code and rebuild; never edit a build. Windows may show "Windows protected your PC" the first time someone runs the .exe, because it isn't signed with a paid certificate; *More info → Run anyway* starts it.
 
 ## How to play
 
@@ -73,14 +87,15 @@ Interesting things your pet does are written to a **Diary** (Records → Diary, 
 - **Theme colour.** Choose "Pet colour" (the device matches your pet and changes each generation), Peach, Lemon, Mint, Sky, Lavender or Rose. Use ←/→ to cycle.
 - **Appearance.** Light or Dark (**D**), and **Pixel text** or **Smooth text**. Pixel text is the game's own pixel font; switch to smooth text if you find it easier to read.
 - **Shell.** Click the left or right half to cycle through *Match my pet* and the shells you've unlocked (see *Shells* below). Sound has its own button on the device, or press **M**.
-- **Desktop roaming** (Windows only, off by default). See "The Frontier" below.
+- **Wandering** (on by default): lets a pet that's used to going outside take long walks around the whole device. See "The Frontier" below.
+- **Open folder** opens your Nimlets folder, with saves, backups and exported reports.
 - **Reset.**
   - *New egg (keep records)* starts over but keeps your collection, family history and gifts.
   - *Erase everything* wipes the pet and all records.
 
   Both ask for confirmation first, and the old save is always backed up as `savegame.json.reset-backup`.
 
-Theme choices live in `saves/preferences.json`, so they survive resets.
+Theme choices live in `preferences.json` in your Nimlets folder, so they survive resets.
 
 **Tips**
 - The red **!** light beside the name and a flashing tab mean it needs something. Answer within about 15 game-minutes to avoid a hidden care mistake.
@@ -210,7 +225,7 @@ When it's unsure, it tests things. It may tap its bowl, look at you, and wait, a
 2. **Experimentation:** it climbs the walls and knocks on the inside of the screen.
 3. **Breakthrough** (teen or older): it climbs *out* of the room. It walks along the screen bezel, pokes your hearts (they wobble), stares at the clock, and sits on the Settings button before diving back in.
 4. **First contact:** on later trips it watches your cursor from outside the room. Click it or press a care button and it hurries home.
-5. **Desktop roaming:** this only happens if you allow it in Settings, and only on Windows. A tiny transparent companion window lets it wander along your taskbar for about a minute before it walks back in, carrying an imaginary souvenir such as "a stray pixel". Click it to send it home. The companion only draws the pet; it never reads your screen, files or other apps.
+5. **Wandering:** a pet that's used to going outside may take a long walk around the whole device: over the hearts, past the clock, onto the A, B and C buttons, along the message screen, down the side of the tabs and up onto the Feed tab, before hopping home with a little souvenir such as "a crumb from the message screen". It never leaves the game window. Switch it off in Settings → Wandering.
 
 Test speeds also speed up these rare behaviours, up to 8×, so you can watch the progression.
 
@@ -233,7 +248,7 @@ Neither you nor your pet starts out understanding the other. The pet doesn't jus
 - **Rituals.** Greet it with the same cursor gesture a few times and it will learn it, and eventually greet *you* first. Rituals can also form around mealtimes, bedtime and play, and they fade if you stop.
 - **Drawing together.** Draw on the lower wall. It may come over, study your mark, and add its own, sometimes an imperfect copy of yours. It learns which of its styles you respond to. Shared drawings outlive the pet, and later generations may copy fragments of them.
 - **Its model of you.** It notices whether you tend to copy it, answer its sounds or gestures, play ball, draw, leave it alone, give it space, or visit briefly. It adapts: more imitation games for imitators, shorter patterns for quick visitors, and more independence for people who leave it be.
-- **Records → Bond.** *Shared Memories* keeps the milestones of your relationship. The **Observation Lab** button shows what's underneath for curious players: the signal tables with expected success, its language level, how it sees you, rituals, game interests, how well it reads your gestures, and its last decision with the reason. **Export report** saves a Markdown file to the saves folder. Swap save files with a friend and compare how long it takes to learn someone else's pet.
+- **Records → Bond.** *Shared Memories* keeps the milestones of your relationship. The **Observation Lab** button shows what's underneath for curious players: the signal tables with expected success, its language level, how it sees you, rituals, game interests, how well it reads your gestures, and its last decision with the reason. **Export report** saves a Markdown file to your Nimlets folder. Swap save files with a friend and compare how long it takes to learn someone else's pet.
 
 ## The Observer: a creature that studies you (v1.4)
 
@@ -269,7 +284,7 @@ Neither you nor your pet starts out understanding the other. The pet doesn't jus
 
 **Privacy and control.**
 - The cursor is only read inside this game's window, and only while it has focus. Nothing else is observed: no other applications, keyboard input outside the game, files, camera or microphone.
-- Desktop roaming stays opt-in, Windows only.
+- Nothing ever leaves the game window: wandering stays inside the device, and can be switched off in Settings.
 - **Settings → Experiments → "Unusual: off"** turns off everything in this section plus the Frontier escapes, leaving a normal, cute pet.
 
 ### What's implemented, prototyped or deferred
@@ -387,8 +402,8 @@ game/shells.py        decorated device shells: unlock rules, "Match my pet", dra
 game/book.py          the Records book: the in-depth storybook version of Records
 game/pixelfont.py     the game's own pixel font, drawn in code
 game/journal.py       the behaviour diary
-game/escape.py        trips across the interface + desktop-roam launcher
-game/roam.py          optional desktop companion process (Windows)
+game/escape.py        trips across the interface, including long wanders around the device
+game/icon.py          the app icon (an egg on an underwater tile), drawn in code
 game/minigames.py     Higher or Lower, Which Way?, Timing Star
 game/sprites.py       procedural pixel-art creature/egg generator
 game/room.py          room, window sky/weather, seasons, mess, lighting, particles
@@ -398,7 +413,7 @@ game/records.py       collection, lineage, totals
 game/save.py          atomic JSON save, .bak fallback on corruption
 tests/test_systems.py core gameplay tests
 tests/test_living.py  living-pet, settings and reset tests
-tests/test_alife.py   artificial-life, diary, bowl, frontier, trip and roam tests
+tests/test_alife.py   artificial-life, diary, bowl, frontier, trip and wander tests
 tests/test_reciprocity.py  reciprocal intelligence tests
 tests/test_observer.py     observer update tests (one group per spec requirement)
 tests/test_shop_room.py    28 forms (all reachable), coins, shop, preferences, room objects
@@ -407,12 +422,17 @@ tests/test_handheld.py     handheld layout at many sizes, shells and unlocks, A/
 tests/test_book.py         Records book: Expand, navigation, every page, shells, diary scroll, buttons
 tests/test_font_shells.py  pixel font, the 14 shells and their unlocks, every screen in both text styles
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
+tools/make_icon.py    writes assets/icon.png and the multi-size assets/icon.ico for the .exe
+tools/build_exe.py    builds the standalone game: tests, icon, PyInstaller, smoke test, release zip
+build_exe.bat         one-click build on Windows (installs what it needs, then runs build_exe.py)
+.github/workflows/build-windows.yml   builds the .exe on GitHub for every Release
+tests/test_build_ready.py  the Nimlets data folder, copying old saves, the test save, the icon
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
 dv-project.json       metadata for the DV Experiments dashboard
 ```
 
-Saves go to `saves/savegame.json` (preferences go to `saves/preferences.json`), written atomically, with a `.bak` copy of the previous save. Autosave runs every 60 seconds, after each evolution, and on quit. To try the example, copy `saves/example_save.json` to `saves/savegame.json`.
+Saves go to `savegame.json` in your Nimlets folder (preferences go to `preferences.json`), written atomically, with a `.bak` copy of the previous save. Autosave runs every 60 seconds, after each evolution, and on quit. To try the example, copy `saves/example_save.json` from the game folder to `savegame.json` in your Nimlets folder.
 
 ### Save structure (abridged)
 
@@ -456,7 +476,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 180 tests cover:
+The 185 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -473,7 +493,7 @@ The 180 tests cover:
 - every species rendering a unique sprite
 - the Living Pet System: quirk assignment and unlocking, upgrading old saves, interrupted activities resuming, depth movement, sleeping in bed, a 400-second autonomous run that stays on screen and varied, cursor gaze, return greetings, catching secret activities, click annoyance, loneliness, routine recognition, wariness fading, medicine nervousness, gifts
 - theme preferences, and both reset types (records kept or erased, backup written, theme preserved)
-- the artificial-life layer: world and diary persistence and merging, beliefs forming once, signals becoming shared and fading, responses reinforcing signals, bowl experiments, fear turning into trust, every egg anomaly rendering, chimeras looking different, mutations emerging later and staying hidden in inheritance, nocturnal schedules, wall drawings, collections, bed dragging, inventions, a new generation studying the old drawing, the ball landing in the bowl, frontier progression to an escape, a full trip across the hearts, clock and Settings, recalling a trip, the roam companion running headless, food going into the bowl and being eaten, the offline diary and away summary, `--reset` ignoring the backup, and 6-slot hearts
+- the artificial-life layer: world and diary persistence and merging, beliefs forming once, signals becoming shared and fading, responses reinforcing signals, bowl experiments, fear turning into trust, every egg anomaly rendering, chimeras looking different, mutations emerging later and staying hidden in inheritance, nocturnal schedules, wall drawings, collections, bed dragging, inventions, a new generation studying the old drawing, the ball landing in the bowl, frontier progression to an escape, a full trip across the hearts, clock and Settings, recalling a trip, a wander around the whole device that never leaves the window, food going into the bowl and being eaten, the offline diary and away summary, `--reset` ignoring the backup, and 6-slot hearts
 - reciprocal intelligence:
   - the gesture classifier and stroke detection
   - conventions forming, changing meaning and being lost to ambiguity
@@ -516,6 +536,8 @@ The 180 tests cover:
 - v1.8 Records book: Expand (button and E key) opens the matching section and Esc, C and close return to it, pages turn with keys, A and tabs, every section draws for an egg and a lived-in save at three window sizes, the diary scrolls within bounds, locked shells can be previewed but not worn, Wear and Match my pet change the shell, and Export, the Observation Lab and new generation work from the book
 
 - v1.9 pixel font and shells: every glyph is well formed, rendered sizes match measured sizes at every scale, unknown characters are stood in for, pixels stay crisp, the generation and rare-egg shells unlock from the records, Match my pet prefers a secret form, then a rare egg, then the family line, falling back to what's unlocked, all 14 shells draw light and dark, every screen (menus, panels, shop, Records, the book, dialogs and mini-games) draws in both text styles at three window sizes, and Settings switches the text style
+
+- v2.0 build-ready: the Nimlets data folder on Windows, macOS and Linux (and the override), old saves copied once without ever overwriting a newer save, the game saving to the data folder with a separate test save, a wander touring the device without leaving the window, and the icon drawing at every size with a valid multi-size .ico
 
   Also covered: deliberate watching, time awareness, real pause, episode recall and fading, the cursor drawing reaching the representation stage, tool use emerging across seeds, private stashes pausing near the cursor, mirror stages, the caretaker figure learning, the memory frame, older saves upgrading, Observation Mode pages, the "Unusual: off" switch, and log export
 
@@ -580,7 +602,9 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Beliefs + experiments; emergent shared signals | ✅ |
 | Anomalous eggs (5) and hidden behavioural mutations (9) | ✅ |
 | Frontier: screen pressing, climbing, escapes across the UI | ✅ |
-| Desktop roaming companion (opt-in) | ⚠️ Written for Windows, only tested headless on Linux |
+| Wandering around the whole device (replaces desktop roaming) | ✅ |
+| Saves in a per-user Nimlets folder, with a one-time copy of old saves | ✅ |
+| App icon drawn in code, with a multi-size .ico | ✅ |
 | Reciprocal intelligence: gestures, two-way imitation, 4 pet-led games, private language (4 levels), experiments on the player, repair, negotiation, boundaries, rituals, drawing together, player model | ✅ |
 | Shared Memories + Observation Lab + report export | ✅ |
 | Versioned releases + CHANGELOG | ✅ |
@@ -589,7 +613,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 180 passing |
+| Automated tests | ✅ 185 passing |
 
 ## Known limitations (honest notes)
 
@@ -601,10 +625,9 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 - **Sound** generation and playback were verified with SDL's dummy audio driver, not real speakers. If no audio device is available, the game prints a note and continues silently.
 - **Clock drift at test speeds.** At test speeds the in-game clock (day/night, bedtime) runs ahead of the real clock and stays ahead when you return to 1×. Use a separate test save (as `run_test_mode.bat` does) to keep your real pet on real time.
 - **Names are random** per generation. There is no rename screen.
-- **The PyInstaller `.exe` route is a suggestion only.** It hasn't been tried.
+- **The .exe build was smoke-tested here as a Linux build** (the same PyInstaller script). The Windows .exe itself is built on your PC or on GitHub, and the build test-runs it before zipping, but I haven't seen it run on a real Windows desktop.
 - **Weather is purely decorative**, by design. It does affect how often the pet watches the window.
 - **Window focus, enter and leave events** (the "you came back" greeting) are handled with standard pygame-ce 2 events. I tested them by calling the handlers directly, because a headless test environment doesn't generate real focus changes. Returning after 45 seconds of inactivity, with the window still focused, triggers the same greeting.
-- **Desktop roaming is unverified on real Windows.** The companion window uses standard Win32 calls: a colour-key transparent layered window that stays on top, has no taskbar button, and is moved with `SetWindowPos`. Its walking logic and result file are tested headless, but I couldn't see it run on a real desktop. It's off by default. If anything looks wrong, switch it off in Settings.
 - **The Observer's thresholds were tuned with a synthetic player.** That includes zones, heading detection, prediction thresholds and cooldowns. Real players are less regular, so expect fewer confident predictions at first. That's fine, since the pet should be wrong sometimes. The thresholds are named constants in `game/observer.py`.
 - **Rarity by design.** In a 25-minute simulated session you'll typically see predictions, watching, a cursor drawing and maybe one ritual. Tool use, mirror understanding and the caretaker figure need many sessions, and some pets never get there.
 - **Gesture recognition was tuned on synthetic cursor paths**, plus a 20-minute simulated player run through the real game loop, not on a real mouse. Real hand movements are messier, so the thresholds may need adjusting after you try it. They're the constants in `classify()` in `game/reciprocity.py`. Pausing briefly at the end of a gesture helps.

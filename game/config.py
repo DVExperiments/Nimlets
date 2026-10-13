@@ -2,12 +2,60 @@
 import copy
 import json
 import os
+import shutil
+import sys
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FROZEN = bool(getattr(sys, "frozen", False))      # running as the packaged .exe
+# Where the game's own files (config/) are: next to the code, or inside the .exe's unpacked bundle.
+ROOT_DIR = getattr(sys, "_MEIPASS", None) if FROZEN else None
+ROOT_DIR = ROOT_DIR or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_DIR = os.path.join(ROOT_DIR, "config")
-SAVE_DIR = os.path.join(ROOT_DIR, "saves")
+APP_NAME = "Nimlets"
+
+
+def data_dir():
+    """Where saves, preferences and exported reports live (v2.0).
+
+    A per-user folder, not the game's own folder, so saves survive updates,
+    reinstalls and the packaged .exe (which unpacks itself somewhere temporary
+    every time it runs). NIMLETS_DATA_DIR overrides it, for tests or portable use.
+    """
+    override = os.environ.get("NIMLETS_DATA_DIR")
+    if override:
+        return override
+    home = os.path.expanduser("~")
+    if sys.platform == "win32":
+        return os.path.join(os.environ.get("APPDATA") or os.path.join(home, "AppData", "Roaming"), APP_NAME)
+    if sys.platform == "darwin":
+        return os.path.join(home, "Library", "Application Support", APP_NAME)
+    return os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.join(home, ".local", "share"), APP_NAME)
+
+
+SAVE_DIR = data_dir()
 SAVE_PATH = os.path.join(SAVE_DIR, "savegame.json")
 PREFS_PATH = os.path.join(SAVE_DIR, "preferences.json")   # survives resets
+# where saves lived before v2.0: the game folder (for the .exe, the folder it sits in)
+LEGACY_SAVE_DIR = os.path.join(os.path.dirname(sys.executable) if FROZEN else ROOT_DIR, "saves")
+
+
+def migrate_legacy_saves(legacy=None, target=None):
+    """Copy saves from the old in-game "saves" folder, once. Originals are left in place.
+
+    Only runs when the new folder has no save yet, so it can never overwrite a newer one.
+    Returns the names of the files copied.
+    """
+    legacy = legacy or LEGACY_SAVE_DIR
+    target = target or SAVE_DIR
+    if not os.path.isdir(legacy) or os.path.exists(os.path.join(target, "savegame.json")):
+        return []
+    names = [n for n in sorted(os.listdir(legacy))
+             if n != "example_save.json" and os.path.isfile(os.path.join(legacy, n))]
+    if not names:
+        return []
+    os.makedirs(target, exist_ok=True)
+    for n in names:
+        shutil.copy2(os.path.join(legacy, n), os.path.join(target, n))
+    return names
 
 # The retro "LCD" is drawn at this logical resolution and scaled up by an
 # integer factor for pixel-perfect output.

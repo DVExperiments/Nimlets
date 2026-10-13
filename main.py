@@ -12,9 +12,5 @@ if sys.platform == "win32":
         pass
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2 and sys.argv[1] == "--roam":      # optional desktop companion process
-        from game.roam import run
-        run(sys.argv[2])
-    else:
-        from game.app import main
-        main(sys.argv[1:])
+    from game.app import main
+    main(sys.argv[1:])

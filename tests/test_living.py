@@ -204,7 +204,7 @@ class PrefsAndResetTests(unittest.TestCase):
             path = os.path.join(d, "p.json")
             self.assertEqual(load_prefs(path)["theme_hue"], "pet")
             save_prefs(path, {"theme_hue": 262, "dark": True})
-            self.assertEqual(load_prefs(path), {"theme_hue": 262, "dark": True, "roam": False,
+            self.assertEqual(load_prefs(path), {"theme_hue": 262, "dark": True, "wander": True,
                                                 "experimental": True, "mirror": False})
 
     def test_reset_from_the_game(self):

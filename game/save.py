@@ -40,7 +40,7 @@ def load_game(path):
     return None
 
 
-DEFAULT_PREFS = {"theme_hue": "pet", "dark": False, "roam": False, "experimental": True, "mirror": False}
+DEFAULT_PREFS = {"theme_hue": "pet", "dark": False, "wander": True, "experimental": True, "mirror": False}
 
 
 def load_prefs(path):

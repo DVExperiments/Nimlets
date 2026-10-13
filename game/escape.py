@@ -6,20 +6,17 @@ at the clock, sits on the Settings button and finally dives back home.
 Anchors are recomputed from the current layout every frame, so resizing the
 window mid-trip still works.
 
-If desktop roaming is enabled (Settings, Windows only), the trip can also
-walk off the edge of the game window. A separate small transparent window
-(roam.py, launched as its own process) then carries the pet across your
-desktop for a minute before it comes back. That companion window only draws
-the pet - it never reads or touches other applications.
+A wander (v2.0, replacing the old desktop companion) is the longest trip: once
+a pet is used to going outside, it may take a long walk around the whole
+device - along the hearts, past the clock, down the tabs, across the message
+screen, over the A/B/C buttons - and come back with a little souvenir. It
+never leaves the game window.
 """
-import json
 import math
-import os
-import subprocess
-import sys
-import tempfile
 
-ROAM_SUPPORTED = sys.platform == "win32"
+SOUVENIRS = ("a stray pixel", "a crumb from the message screen", "a heart that fell off the hearts strip",
+             "a speck of shell paint", "a tiny star from the shell", "a loose bit of tab", "a button shine",
+             "the tick of the clock")
 
 
 class Trip:
@@ -34,7 +31,6 @@ class Trip:
         self.i = 0
         self.t = 0.0
         self.done = False
-        self.roaming = False            # waiting for the desktop companion to return
         self.facing = 1
         self.pos = None
         self.poke = 0.0                 # makes the hearts wobble when poked
@@ -76,11 +72,22 @@ class Trip:
             {"mode": "hop", "at": ("settings", 0), "state": "jump"},
             {"mode": "stay", "at": ("settings", 0), "state": "sit", "dur": 3.5 if self.contact else 2.5},
         ]
-        if self.roam:
-            steps += [{"mode": "hop", "at": ("top_right", 0), "state": "jump"},
-                      {"mode": "walk", "at": ("offscreen", 0), "state": "walk"},
-                      {"mode": "roam", "at": ("offscreen", 0), "state": "walk"},
-                      {"mode": "walk", "at": ("top_right", 0), "state": "walk"}]
+        if self.roam:                       # a wander around the whole device
+            steps += [{"mode": "hop", "at": ("abc", "a"), "state": "jump"},
+                      {"mode": "hop", "at": ("abc", "b"), "state": "jump"},
+                      {"mode": "stay", "at": ("abc", "b"), "state": "tap", "dur": 1.2},
+                      {"mode": "hop", "at": ("abc", "c"), "state": "jump"},
+                      {"mode": "hop", "at": ("msg", 0.85), "state": "jump"},
+                      {"mode": "walk", "at": ("msg", 0.15), "state": "walk"},
+                      {"mode": "stay", "at": ("msg", 0.15), "state": "watch", "dur": 1.4, "face": -1},
+                      {"mode": "hop", "at": ("tabside", 3), "state": "jump"},
+                      {"mode": "walk", "at": ("tabside", 1), "state": "walk"},
+                      {"mode": "stay", "at": ("tabside", 1), "state": "watch", "dur": 1.6, "face": -1},
+                      {"mode": "hop", "at": ("tabtop", 0), "state": "jump"},
+                      {"mode": "stay", "at": ("tabtop", 0), "state": "sit", "dur": 2.0, "event": "souvenir"},
+                      {"mode": "hop", "at": ("tabtop", 4), "state": "jump"},
+                      {"mode": "walk", "at": ("tabside", 5), "state": "walk"},
+                      {"mode": "stay", "at": ("tabside", 5), "state": "wave", "dur": 1.0, "face": -1}]
         steps += [
             {"mode": "hop", "at": ("bezel", 0.5), "state": "jump"},
             {"mode": "stay", "at": ("bezel", 0.5), "state": "wave", "dur": 1.0},
@@ -109,23 +116,28 @@ class Trip:
             return (L.shell.right - 6, L.top.bottom + 4)
         if name == "top_right":
             return (L.shell.right - 30, L.top.bottom + 4)
-        if name == "offscreen":
-            return (L.W + 60, L.top.bottom + 4)
+        if name == "abc":                          # standing on top of an A/B/C button
+            r = L.abc[frac]
+            return (r.centerx, r.top + 4)
+        if name == "msg":                          # walking along the top of the message screen
+            return (L.msg.left + 20 + (L.msg.w - 40) * frac, L.msg.top + 3)
+        if name == "tabtop":                       # on top of the first tab of a column
+            r = L.buttons[frac]
+            return (r.centerx, r.top + 3)
+        if name == "tabside":                      # on the shell, just outside a column of tabs
+            r = L.buttons[frac]
+            side = -1 if frac < 4 else 1
+            return ((r.left if side < 0 else r.right) + side * 16, r.bottom - 2)
         if name == "inside":
             return (L.lcd.centerx, L.lcd.top + 40)
         return (L.W / 2, L.H / 2)
 
     def recall(self):
         """Hurry home (the player pressed a button or clicked the pet)."""
-        if self.done or self.roaming:
+        if self.done:
             return
         tail = [s for s in self.steps if s["at"][0] in ("bezel", "inside")][-3:]
         self.steps = self.steps[: self.i] + tail
-        self.t = 0.0
-
-    def resume_from_roam(self):
-        self.roaming = False
-        self.i += 1
         self.t = 0.0
 
     # ---- update -------------------------------------------------------------------------
@@ -168,10 +180,6 @@ class Trip:
             if abs(target[0] - sx) > 1:
                 self.facing = 1 if target[0] > sx else -1
             finished = ph >= 1
-        elif mode == "roam":
-            self.pos = target
-            self.roaming = True
-            return "walk"
         else:  # stay
             self.pos = target
             if step.get("face"):
@@ -195,56 +203,7 @@ class Trip:
         return state
 
     def hit(self, pos, size):
-        if not self.pos or self.roaming:
+        if not self.pos:
             return False
         x, y = self.pos
         return abs(pos[0] - x) < size * 0.4 and y - size * 0.8 < pos[1] < y + 4
-
-
-# ---------------------------------------------------------------- desktop roam
-def main_window_rect():
-    """Screen rectangle of the game window (Windows only)."""
-    if not ROAM_SUPPORTED:
-        return None
-    try:
-        import ctypes
-        from ctypes import wintypes
-        import pygame
-        hwnd = pygame.display.get_wm_info().get("window")
-        rect = wintypes.RECT()
-        ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
-        return [rect.left, rect.top, rect.right, rect.bottom]
-    except Exception as exc:     # pragma: no cover - Windows only
-        print(f"[roam] could not read window rect: {exc}")
-        return None
-
-
-def launch_roam(creature, main_py, duration=None, force=False):
-    """Start the desktop companion process. Returns (process, result_path) or (None, None)."""
-    if not (ROAM_SUPPORTED or force):
-        return None, None
-    rect = main_window_rect() or [200, 200, 1160, 960]
-    fd, cfg_path = tempfile.mkstemp(prefix="pocketpal_roam_", suffix=".json")
-    os.close(fd)
-    result_path = cfg_path.replace(".json", "_result.json")
-    cfg = {
-        "species": creature.species, "genome": creature.genome, "elder": creature.elder,
-        "name": creature.name, "rect": rect, "duration": duration or 60, "result": result_path,
-    }
-    with open(cfg_path, "w", encoding="utf-8") as f:
-        json.dump(cfg, f)
-    try:
-        flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-        proc = subprocess.Popen([sys.executable, main_py, "--roam", cfg_path], creationflags=flags)
-        return proc, result_path
-    except OSError as exc:
-        print(f"[roam] could not start: {exc}")
-        return None, None
-
-
-def read_roam_result(path):
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, ValueError, TypeError):
-        return None

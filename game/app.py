@@ -4,6 +4,7 @@ import math
 import os
 import random
 import shutil
+import sys
 import time
 
 import pygame
@@ -16,7 +17,7 @@ from .creature import Creature
 from .memory import FOODS, GAMES
 from .minigames import GAME_CLASSES
 from . import learning
-from .escape import ROAM_SUPPORTED, Trip, launch_roam, read_roam_result
+from .escape import SOUVENIRS, Trip
 from .journal import Journal
 from .living import BOWL_X, GIFTS, Mind
 from .observation import export_log
@@ -43,6 +44,8 @@ def parse_args(argv):
     ap.add_argument("--fast", action="store_true", help="shortcut for --speed 600")
     ap.add_argument("--reset", action="store_true", help="start a fresh game (old save is backed up)")
     ap.add_argument("--save", default=None, help="path to the save file")
+    ap.add_argument("--test-save", action="store_true",
+                    help="use the separate test save (test_save.json) in the Nimlets data folder")
     ap.add_argument("--mute", action="store_true", help="start with sound off")
     ap.add_argument("--smoke-test", type=int, default=0, metavar="FRAMES",
                     help="run N frames headlessly-friendly and exit (for testing)")
@@ -59,6 +62,11 @@ class Game:
         pygame.mixer.pre_init(22050, -16, 1, 512)
         pygame.init()
         pygame.display.set_caption(f"Nimlets v{VERSION}")
+        try:                                       # the egg icon, drawn in code (game/icon.py)
+            from .icon import icon_surface
+            pygame.display.set_icon(icon_surface(32))
+        except Exception as exc:
+            print(f"[icon] {exc}")
         w = max(MIN_W, int(self.settings["window_width"]))
         h = max(MIN_H, int(self.settings["window_height"]))
         self.screen = pygame.display.set_mode((w, h), pygame.RESIZABLE)
@@ -79,9 +87,6 @@ class Game:
         self.mind.weather_at = lambda wt: self.room.weather(wt, self.room.season(time.localtime(wt).tm_mon))
         self.confirm = None
         self.trip = None
-        self.roam_proc = None
-        self.roam_result = None
-        self.roam_started = 0.0
         self.away = None
         self.diary_scroll = 0
         self.in_catch_up = False
@@ -110,11 +115,17 @@ class Game:
         self.zzz_t = 0.0
         self.hover = None
         self.L = None
-        self.save_path = self.args.save or config.SAVE_PATH
+        self.moved_saves = []
+        if self.args.save:
+            self.save_path = self.args.save
+        else:
+            self.moved_saves = config.migrate_legacy_saves()
+            self.save_path = os.path.join(config.SAVE_DIR, "test_save.json") if self.args.test_save \
+                else config.SAVE_PATH
         self.prefs_path = (os.path.join(os.path.dirname(os.path.abspath(self.save_path)), "preferences.json")
                            if self.args.save else config.PREFS_PATH)
         self.prefs = load_prefs(self.prefs_path)
-        self.mind.allow_roam = bool(self.prefs.get("roam")) and ROAM_SUPPORTED
+        self.mind.allow_roam = bool(self.prefs.get("wander", True))
         self.mind.experimental_on = bool(self.prefs.get("experimental", True))
         self.mind.mirror_on = bool(self.prefs.get("mirror", False))
         self.mind.species_db = self.species
@@ -147,8 +158,12 @@ class Game:
                 speeds.sort()
                 self.settings["test_speeds"] = speeds
             self.speed_idx = speeds.index(target)
+        if self.moved_saves:
+            print(f"[save] copied {len(self.moved_saves)} file(s) from the old saves folder to {config.SAVE_DIR}")
+            self.say("Your saves now live in your Nimlets folder (Settings, Open folder).")
 
     # ------------------------------------------------------------------ state
+
     def speeds(self):
         if not self.settings.get("allow_test_speeds", True):
             return [1]
@@ -312,6 +327,7 @@ class Game:
         c = self.c
         self.menu = None
         self.trip = Trip(self.rng, roam=roam, contact=c.frontier.get("stage", 0) >= 3, variant=variant)
+        self.trip_started = self.world_time
         self.mind.escape_started(roam)
         self.beh.start_plan([act("outside", 1e9, tag="outside")])
         self.say(f"{c.name} climbed out of its room!" if c.frontier["escapes"] <= 1
@@ -322,9 +338,6 @@ class Game:
         if not self.trip:
             return
         self.trip = None
-        if self.roam_proc and self.roam_proc.poll() is None:
-            self.roam_proc.terminate()
-        self.roam_proc = None
         self.beh.x = 80.0
         self.beh.z = 0.3
         self.beh.start_plan([act("dropin", 0.9, tag="reaction"),
@@ -347,6 +360,8 @@ class Game:
                           important=True)
                 m.trace([f"Outside its room, beside the {arg} control", "Pressed it",
                          "The world did not change for it", "Remembered that"], "time")
+            elif ev == "souvenir" and trip.roam:
+                trip.souvenir = self.rng.choice(SOUVENIRS)
             elif ev == "edge":
                 if m.first("app_edge"):
                     m.log("frontier", "walked to the very edge of the window and pressed against it.", "ghost",
@@ -354,27 +369,13 @@ class Game:
                 m.trace(["Followed the interface to its outer edge", "Pressed against the window boundary"],
                         "frontier")
         trip.events.clear()
-        if trip.roaming:
-            if self.roam_proc is None and self.roam_result is None:
-                main_py = os.path.join(config.ROOT_DIR, "main.py")
-                self.roam_proc, self.roam_result = launch_roam(self.c, main_py)
-                self.roam_started = time.time()
-                if self.roam_proc is None:
-                    trip.resume_from_roam()
-                else:
-                    self.say(f"{self.c.name} walked right off the edge of the window...")
-            elif self.roam_proc is not None:
-                timed_out = time.time() - self.roam_started > 150
-                if self.roam_proc.poll() is not None or timed_out:
-                    if timed_out:
-                        self.roam_proc.terminate()
-                    res = read_roam_result(self.roam_result) or {"souvenir": "a stray pixel",
-                                                                 "seconds": time.time() - self.roam_started}
-                    self.roam_proc = self.roam_result = None
-                    self.mind.roam_returned(res["souvenir"], res["seconds"])
-                    self.say(f"{self.c.name} is back from the desktop with {res['souvenir']}!")
-                    self.audio.play("happy")
-                    trip.resume_from_roam()
+        if trip.done and trip.roam:
+            souvenir = getattr(trip, "souvenir", None) or self.rng.choice(SOUVENIRS)
+            self.mind.roam_returned(souvenir, max(1.0, self.world_time - getattr(self, "trip_started", self.world_time)))
+            self.end_trip()
+            self.say(f"{self.c.name} is back from a wander around the device with {souvenir}!")
+            self.audio.play("happy")
+            return
         if trip.done:
             self.end_trip()
 
@@ -911,7 +912,7 @@ class Game:
                 "Your collection, family history and gifts are kept."], "Start over", True, "settings"),
             "reset_hard": ("Erase everything?", [
                 "Your pet, collection, family history and records will all be deleted.",
-                "A backup copy of the old save is kept in the saves folder."], "Erase", True, "settings"),
+                "A backup copy of the old save is kept in your Nimlets folder."], "Erase", True, "settings"),
         }
         if kind == "wipe_all":
             gens = [g for g in self.world.mural_generations() if g != self.c.generation]
@@ -1236,6 +1237,9 @@ class Game:
                     self.set_pref("pixel_text", not self.prefs.get("pixel_text", True))
                     self.audio.play("select")
                     return
+                if hit.get("folder_btn") and hit["folder_btn"].collidepoint(pos):
+                    self.open_data_folder()
+                    return
                 if hit.get("shell_btn") and hit["shell_btn"].collidepoint(pos):
                     self.cycle_shell(-1 if pos[0] < hit["shell_btn"].centerx else 1)
                     return
@@ -1260,10 +1264,10 @@ class Game:
                     self.obs_mode = True
                     return
                 if hit.get("roam_btn") and hit["roam_btn"].collidepoint(pos):
-                    self.set_pref("roam", not self.prefs.get("roam"))
-                    self.mind.allow_roam = bool(self.prefs["roam"]) and ROAM_SUPPORTED
-                    self.say("Desktop roaming allowed. Your pet may wander out now and then."
-                             if self.prefs["roam"] else "Desktop roaming switched off.")
+                    self.set_pref("wander", not self.prefs.get("wander", True))
+                    self.mind.allow_roam = bool(self.prefs["wander"])
+                    self.say("Wandering allowed. Your pet may explore the whole device now and then."
+                             if self.prefs["wander"] else "Wandering switched off. It will stay near its room.")
                     return
                 if hit.get("reset_soft") and hit["reset_soft"].collidepoint(pos):
                     self.ask("reset_soft")
@@ -1296,7 +1300,7 @@ class Game:
                 if hit.get("export_btn") and hit["export_btn"].collidepoint(pos):
                     folder = os.path.dirname(os.path.abspath(self.save_path))
                     path = self.mind.recip.report(folder)
-                    self.say(f"Report saved: {os.path.basename(path)} (in the saves folder)")
+                    self.say(f"Report saved: {os.path.basename(path)} (in your Nimlets folder: Settings, Open folder)")
                     return
             if L.bezel.collidepoint(pos):
                 return
@@ -1368,7 +1372,7 @@ class Game:
             return
         folder = os.path.dirname(os.path.abspath(self.save_path))
         path = export_log(self.mind, folder)
-        self.say(f"Observation log saved: {os.path.basename(path)} (in the saves folder)")
+        self.say(f"Observation log saved: {os.path.basename(path)} (in your Nimlets folder: Settings, Open folder)")
 
     # ---------------------------------------------------------------- coins & shop
     def earn(self, n, why=""):
@@ -1456,6 +1460,21 @@ class Game:
         if msg:
             self.say(msg)
 
+    def open_data_folder(self):
+        """Show the folder with saves and exported reports in the system's file browser."""
+        folder = os.path.dirname(os.path.abspath(self.save_path))
+        os.makedirs(folder, exist_ok=True)
+        try:
+            if sys.platform == "win32":
+                os.startfile(folder)                                  # noqa: the Windows file browser
+            else:
+                import subprocess
+                subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", folder])
+            self.say("Opened your Nimlets folder.")
+        except Exception:
+            self.say(f"Your Nimlets folder: {folder}")
+        self.audio.play("select")
+
     # ---------------------------------------------------------------- the Records book
     QUICK_TO_BOOK = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
 
@@ -1536,7 +1555,7 @@ class Game:
         if hit.get("book_export") and hit["book_export"].collidepoint(pos):
             folder = os.path.dirname(os.path.abspath(self.save_path))
             path = self.mind.recip.report(folder)
-            self.say(f"Report saved: {os.path.basename(path)} (in the saves folder)")
+            self.say(f"Report saved: {os.path.basename(path)} (in your Nimlets folder: Settings, Open folder)")
 
     # ---------------------------------------------------------------- shells & A/B/C
     def shell_choice(self):
@@ -1814,7 +1833,7 @@ class Game:
 
     def draw_outside(self, screen, L):
         trip = self.trip
-        if not trip or not trip.pos or trip.roaming:
+        if not trip or not trip.pos:
             return
         k = self.outside_scale()
         state = getattr(self, "trip_state", "walk")
@@ -1912,7 +1931,7 @@ class Game:
                                  self.can_new_generation(), info)
         elif under == "settings":
             have = shells.unlocked(self.records)
-            prefs = dict(self.prefs, _roam_supported=ROAM_SUPPORTED, _version=VERSION,
+            prefs = dict(self.prefs, _version=VERSION,
                          _shell_label=shells.label(self.shell_choice()),
                          _shell_hint=f"{len(have)} of {len(shells.SHELLS)} shells unlocked. More appear as your family grows.")
             prefs.setdefault("experimental", True)

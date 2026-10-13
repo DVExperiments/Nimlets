@@ -20,7 +20,7 @@ it deciding?"
  8. Signals      an emergent shared language built from your responses.
  9. The Frontier it slowly discovers the edges of its world, presses on the
                  screen, climbs out across the interface, and (only if you
-                 allow it) roams your desktop.
+                 allow it) wanders around the whole device.
 """
 import math
 import time
@@ -1341,10 +1341,10 @@ class Mind:
         c.frontier["roams"] += 1
         self.world.souvenirs.append(souvenir)
         self.world.souvenirs = self.world.souvenirs[-12:]
-        self.log("roam", f"came back from {int(seconds)} seconds on your desktop, carrying {souvenir}.",
+        self.log("roam", f"came back from a wander around the whole device, carrying {souvenir}.",
                  "star", important=True)
         if c.frontier["roams"] == 1:
-            self._rare("A pet that visited the desktop")
+            self._rare("A pet that wandered the whole device")
 
     # ---- step side effects ---------------------------------------------------------------
     def step_fx(self, step, beh):

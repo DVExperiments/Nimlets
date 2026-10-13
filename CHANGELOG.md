@@ -4,6 +4,38 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.0.0 "Build Ready"
+
+Getting ready for the standalone Windows .exe.
+
+**Saves in your own Nimlets folder**
+- **A per-user folder.** Saves, preferences, backups and exported reports now live in `%APPDATA%\Nimlets` on Windows (Application Support on macOS, `~/.local/share` on Linux), not in the game folder. They survive updates, reinstalls and the packaged .exe.
+- **A one-time copy of old saves.** The first run copies any saves from the old `saves` folder. The originals are left in place, and it never overwrites a newer save.
+- **Settings → Open folder** opens the folder in your file browser.
+- **Test mode** uses its own `test_save.json` there (`--test-save`).
+- **`NIMLETS_DATA_DIR`** overrides the folder, for example for a portable copy.
+
+**Wandering replaces desktop roaming**
+- **The separate desktop companion window is gone,** along with the Windows-only code that ran it.
+- **Instead, a pet used to going outside may take a long wander around the whole device:** the hearts, the clock, the A, B and C buttons, the message screen, the sides of the tabs and the top of the Feed tab, coming home with a little souvenir.
+- **It never leaves the game window.**
+- **Settings → Wandering** (on by default) switches it off.
+
+**An app icon**
+- **A spotted egg on a purple tile,** with an underwater pattern from the Tide shell. It's drawn in code and simplified at small sizes so it still reads at 16 px.
+- **The game window uses it.**
+- **`tools/make_icon.py`** writes `assets/icon.png` and a multi-size `assets/icon.ico` for the .exe.
+
+**Building the standalone game**
+- **`tools/build_exe.py`** runs the tests, draws the icon, builds a single-file `Nimlets.exe` with PyInstaller, test-runs the built game (it must start, save to its data folder and quit cleanly), and zips it with a short read-me for players.
+- **`build_exe.bat`** does all of that with a double-click on Windows.
+- **`.github/workflows/build-windows.yml`** builds it on GitHub's Windows machines for every published Release and attaches the zip, or on demand from the Actions tab.
+- **The packaged game finds its own files inside the .exe,** and copies saves from a `saves` folder next to it on first run.
+
+**Tests**
+- 5 new tests (185 in total).
+- The offline-diary test no longer depends on the real time of day. It used to fail now and then overnight, which would have blocked automatic builds.
+
 ## v1.9.0 "Pixel Perfect"
 
 **The game's own pixel font**
