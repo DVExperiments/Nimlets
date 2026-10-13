@@ -1,0 +1,63 @@
+{
+  "_comment": "All durations are in simulated time. base_time_scale 1.0 = real time. Use test_speeds (T key) or --speed to accelerate.",
+  "window_width": 960,
+  "window_height": 760,
+  "fps": 30,
+  "heart_slots": 6,
+  "sound_enabled": true,
+  "base_time_scale": 1.0,
+  "allow_test_speeds": true,
+  "test_speeds": [
+    1,
+    10,
+    60,
+    600,
+    3600
+  ],
+  "offline_cap_hours": 8.0,
+  "autosave_seconds": 60,
+  "hemisphere": "north",
+  "stage_hours": {
+    "egg": 0.05,
+    "baby": 1.0,
+    "child": 24.0,
+    "teen": 48.0,
+    "adult": 144.0,
+    "elder": 72.0
+  },
+  "new_generation_min_adult_hours": 24.0,
+  "decay_per_hour": {
+    "hunger": 9.0,
+    "happiness": 7.0,
+    "hygiene": 5.0,
+    "energy_awake": 5.0,
+    "energy_sleep_recover": 15.0
+  },
+  "baby_decay_multiplier": 3.0,
+  "poop_interval_hours": 3.0,
+  "attention_timeout_minutes": 15,
+  "lights_timeout_minutes": 30,
+  "fake_call_chance_per_hour": 0.35,
+  "bedtimes": {
+    "baby": [
+      19,
+      8
+    ],
+    "child": [
+      20,
+      8
+    ],
+    "teen": [
+      21,
+      8
+    ],
+    "adult": [
+      22,
+      8
+    ],
+    "elder": [
+      20,
+      9
+    ]
+  }
+}
