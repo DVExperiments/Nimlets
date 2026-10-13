@@ -27,6 +27,8 @@ BELIEFS = {
     "bowl_summons": ("seems to think tapping the bowl makes food appear",
                      "seems to have worked out that tapping the bowl does nothing"),
     "time_control": ("seems to connect the speed control with its world suddenly rushing by", None),
+    "wall_ok": ("seems to think its drawings on the wall are welcome",
+                "seems to have decided you don't want it drawing on the wall"),
     "pause_button": ("seems to have noticed that its world stops around the pause button", None),
 }
 

@@ -1322,6 +1322,8 @@ class Reciprocity:
             return
         self.last_player_stroke = points
         m.note_action("draw")
+        if c.stage != "egg":
+            m.learn("wall_ok", 0.8, 0.05)          # you draw here too, so drawing must be fine
         if self.last_pet_style and m.clock - self.last_pet_style[1] < 25:
             st = self.last_pet_style[0]
             self.b["styles"][st] = round(self.b["styles"].get(st, 0) + 1, 2)

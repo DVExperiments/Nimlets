@@ -458,14 +458,26 @@ class Room:
         "petal": ([".p.", "ppp", ".p."], {"p": (250, 150, 190)}),
     }
 
+    SPONGE = ([".######.", "#yyyyyy#", "#yoyyoy#", "#yyoyyy#", "#oyyyoy#", ".######."],
+              {"#": (176, 128, 40), "y": (255, 214, 96), "o": (222, 170, 64)})
+
+    def draw_sponge(self, s, pos, wiping):
+        """The wall-cleaning sponge, drawn at the cursor."""
+        if not hasattr(self, "sponge_sprite"):
+            self.sponge_sprite = make_sprite(*self.SPONGE)
+        x, y = int(pos[0]), int(pos[1])
+        if wiping:
+            pygame.draw.circle(s, (230, 240, 255), (x, y), 3, 1)
+        s.blit(self.sponge_sprite, (x - 4, y - 3 + (0 if wiping else -1)))
+
     def draw_objects(self, s, mind, c, t, hue):
         from .living import BOWL_X
         w = mind.world
         if not hasattr(self, "item_sprites"):
             self.item_sprites = {k: make_sprite(*v) for k, v in self.ITEM_ART.items()}
         # wall drawing (persistent, may be several generations old)
-        for x, y, col, gen in w.mural:
-            s.set_at((x, y), tuple(col))
+        for px in w.mural:
+            s.set_at((px[0], px[1]), tuple(px[2]))
         # scratch marks at the left edge of the room
         for i in range(min(8, w.marks.get("left", 0))):
             pygame.draw.line(s, (170, 140, 115), (1, 60 + i * 3), (3, 58 + i * 3))

@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 1.5.1 "Menagerie"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 1.6.0 "Clean Slate"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -30,14 +30,14 @@ Optional standalone `.exe`: `pip install pyinstaller`, then `pyinstaller --onefi
 |---|---|---|
 | Feed | 1 | Rice Ball, Fish, Berries (meals) or Cake (snack, more happiness, more weight). The food goes into the bowl and your pet trots over to eat it. **Shop** at the bottom of the list. |
 | Play | 2 | Three mini-games, each under a minute. Winning earns coins. **Shop** at the bottom of the list. |
-| Clean | 3 | Flush away mess |
+| Clean | 3 | Flush away mess. When the room is already tidy, wipe the **wall** instead: a **Sponge** for bits, or **Wipe it all**. |
 | Medicine | 4 | Cure illness (sometimes needs two doses) |
 | Train | 5 | **Praise** good behaviour, **Scold** mischief |
 | Lights | 6 | Turn the lights off when it sleeps |
 | Status | 7 | Hearts, discipline, weight, age, learned favourites |
 | Records | 8 | Collection, family tree, care records, the **Diary**, **Bond** (Shared Memories and the Observation Lab), new generation |
 
-Other controls: **drag the bed** to move it (your pet will notice, eventually). **F9** opens Observation Mode. **Click and drag on the lower part of the wall** to draw (your marks are coral; your pet may answer). **Click the pet** to pet it. **Click the ball** to kick it. **Click a gift** to keep it. **M** toggles sound, **P** pauses time, **T** changes speed, **S** or **F5** saves, and **O** opens Settings. **Esc** closes menus. In menus, use arrows and Enter or the number keys. In mini-games, use ←/→ (or A/D) and Space.
+Other controls: **drag the bed** to move it (your pet will notice, eventually). **F9** opens Observation Mode. **Click and drag on the lower part of the wall** to draw (your marks are coral; your pet may answer). To clean the wall, press **Clean** while the room is tidy, pick **Sponge** and drag over the marks; right-click, **Esc** or **Clean** puts the sponge away. **Click the pet** to pet it. **Click the ball** to kick it. **Click a gift** to keep it. **M** toggles sound, **P** pauses time, **T** changes speed, **S** or **F5** saves, and **O** opens Settings. **Esc** closes menus. In menus, use arrows and Enter or the number keys. In mini-games, use ←/→ (or A/D) and Space.
 
 **Hearts:** the top bar shows **Hunger, Happy and Health** as rows of 6 hearts. You can change the number of slots with `heart_slots` in `config/settings.json`.
 
@@ -142,7 +142,15 @@ The newest layer turns Nimlets into a small experiment in artificial life. None 
 - a nest around its bed
 - invented games, such as bouncing the ball off the wall or trying to get it into the food bowl
 
-These belong to the **room**, not the pet, so they survive evolution and generations. A new pet may study the drawing its predecessor left and add to it, or play an old invented game "picked up from the room". It's a tiny culture.
+These belong to the **room**, not the pet, so they survive evolution and generations.
+
+**Cleaning the wall (v1.6).** The drawing can get busy over time, so you can wipe it (Clean, when the room is tidy). What your pet makes of that depends on *whose* marks you wipe and *how fresh* they were:
+- Wiping something it drew **within the last game-hour** reads as "please don't". Do that a few times and it decides you don't want it drawing on the wall. It then rarely draws while you're watching... and sometimes draws while you're away instead.
+- Wiping marks from **earlier today** is a milder version of the same lesson.
+- Wiping **old** marks, or your own coral ones, is just tidying, and teaches it nothing.
+- Stubborn pets shrug it off more; a sleeping pet only half notices.
+- Leaving its drawings up for a few hours, or drawing on the wall yourself, slowly persuades it that drawing is welcome again.
+- Wiping away the last of an *ancestor's* drawing is noted in the Diary, and a pet that once studied that drawing may be sad to see it go. A new pet may study the drawing its predecessor left and add to it, or play an old invented game "picked up from the room". It's a tiny culture.
 
 **Beliefs.** Each pet keeps learned associations:
 - the cursor near Feed means food is coming
@@ -151,6 +159,7 @@ These belong to the **room**, not the pet, so they survive evolution and generat
 - the ball is fun
 - clicked things move
 - the room has edges, and those edges aren't always solid
+- its drawings on the wall are welcome, or not (see *Cleaning the wall*)
 
 When it's unsure, it tests things. It may tap its bowl, look at you, and wait, and whether you feed it changes what it believes. The first time a belief becomes firm, the Diary notes it.
 
@@ -337,6 +346,7 @@ game/uncanny.py       rare-event registry: levels, prerequisites, cooldowns
 game/observation.py   reasoning trace and exportable observation logs
 tools/devsim.py       seeded accelerated simulation with a synthetic player
 game/world.py         persistent room shared across generations (drawing, nest, inventions)
+game/wall.py          cleaning the wall, and what the pet learns from it
 game/journal.py       the behaviour diary
 game/escape.py        trips across the interface + desktop-roam launcher
 game/roam.py          optional desktop companion process (Windows)
@@ -353,6 +363,7 @@ tests/test_alife.py   artificial-life, diary, bowl, frontier, trip and roam test
 tests/test_reciprocity.py  reciprocal intelligence tests
 tests/test_observer.py     observer update tests (one group per spec requirement)
 tests/test_shop_room.py    28 forms (all reachable), coins, shop, preferences, room objects
+tests/test_wall.py         wall cleaning: timestamps, sponge, wipe-all, learning from wipes
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
@@ -403,7 +414,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 135 tests cover:
+The 152 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -455,6 +466,8 @@ The 135 tests cover:
   - pets' tastes differ, preferences are learned, and boredom builds up
   - coins persist
   - room objects respond to clicks, shaking the plant frees a trinket, and tidy pets straighten the picture
+
+- v1.6 wall cleaning: drawings carry a timestamp, the sponge only wipes where you drag, *Wipe it all* asks first, Clean still flushes mess before offering the wall, fresh wipes teach a lesson and old ones don't, stubborn and sleeping pets learn less, secret drawing, the belief recovering, ancestors' drawings being noted, and old saves without timestamps
 
   Also covered: deliberate watching, time awareness, real pause, episode recall and fading, the cursor drawing reaching the representation stage, tool use emerging across seeds, private stashes pausing near the cursor, mirror stages, the caretaker figure learning, the memory frame, older saves upgrading, Observation Mode pages, the "Unusual: off" switch, and log export
 
@@ -523,7 +536,8 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | 28 forms across two family trees, 4 secrets | ✅ |
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
-| Automated tests | ✅ 135 passing |
+| Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
+| Automated tests | ✅ 152 passing |
 
 ## Known limitations (honest notes)
 

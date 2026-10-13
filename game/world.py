@@ -6,11 +6,14 @@ games pets have invented, scratch marks at the edges of the room and
 souvenirs from trips outside. New pets inherit the room - a tiny culture.
 """
 
+import time
+
 PILE_MAX = 12
 MURAL_MAX = 700
 ITEM_KINDS = ("pebble", "leaf", "button", "feather", "bead", "petal")
 BED_RANGE = (22.0, 116.0)
 MURAL_RECT = (8, 50, 132, 20)      # x, y, w, h on the lower wall (LCD pixels)
+TRANSIENT = ("bowl_food", "active_toy", "now")
 
 
 class World:
@@ -19,7 +22,8 @@ class World:
         self.ball_x = 100.0
         self.ball_in_bowl = False
         self.pile = {"x": 44.0, "items": []}
-        self.mural = []            # [x, y, [r, g, b], generation]
+        self.mural = []            # [x, y, [r, g, b], generation, world_time drawn]
+        self.now = time.time()     # transient: current world time, kept up to date by the mind
         self.mural_artists = {}    # generation (str) -> name
         self.inventions = []       # {"id", "by", "gen"}
         self.marks = {"left": 0, "right": 0, "glass": 0}
@@ -40,13 +44,14 @@ class World:
         if len(self.pile["items"]) > PILE_MAX:
             self.pile["items"].pop(0)
 
-    def add_mural(self, pixels, gen, artist):
+    def add_mural(self, pixels, gen, artist, t=None):
         mx, my, mw, mh = MURAL_RECT
+        t = float(self.now if t is None else t)
         taken = {(p[0], p[1]) for p in self.mural}
         added = 0
         for x, y, col in pixels:
             if mx <= x < mx + mw and my <= y < my + mh and (x, y) not in taken:
-                self.mural.append([int(x), int(y), list(col), gen])
+                self.mural.append([int(x), int(y), list(col), gen, t])
                 taken.add((x, y))
                 added += 1
         if len(self.mural) > MURAL_MAX:
@@ -54,6 +59,20 @@ class World:
         if added:
             self.mural_artists[str(gen)] = artist
         return added
+
+    def wipe(self, cx, cy, radius=3.0):
+        """Wipe the wall around (cx, cy) with the sponge. Returns the removed pixels."""
+        r2 = radius * radius
+        keep, gone = [], []
+        for p in self.mural:
+            (gone if (p[0] - cx) ** 2 + (p[1] - cy) ** 2 <= r2 else keep).append(p)
+        if gone:
+            self.mural = keep
+        return gone
+
+    def wipe_all(self):
+        gone, self.mural = self.mural, []
+        return gone
 
     def mural_generations(self):
         """Pet generations that drew here (your own marks are generation 0)."""
@@ -70,13 +89,13 @@ class World:
 
     # ---- persistence -----------------------------------------------------------------
     def to_dict(self):
-        return {k: v for k, v in vars(self).items() if k not in ("bowl_food", "active_toy")}
+        return {k: v for k, v in vars(self).items() if k not in TRANSIENT}
 
     @classmethod
     def from_dict(cls, data):
         w = cls()
         for k, v in (data or {}).items():
-            if hasattr(w, k) and k not in ("bowl_food", "active_toy"):
+            if hasattr(w, k) and k not in TRANSIENT:
                 if isinstance(getattr(w, k), dict) and isinstance(v, dict):
                     getattr(w, k).update(v)
                 else:

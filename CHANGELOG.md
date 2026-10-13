@@ -4,6 +4,30 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v1.6.0 "Clean Slate"
+
+**Cleaning the wall**
+- **Clean** still flushes mess first. When the room is already tidy and there's something on the wall, it offers **Sponge** or **Wipe it all**.
+- **Sponge:** drag over the wall to wipe just the bits you choose, with little bubbles. Right-click, Esc, Clean or clicking elsewhere puts it away.
+- **Wipe it all** asks for confirmation first, and mentions any ancestors' drawings that would be lost.
+- The first time you clean the room while the wall has drawings, a hint mentions that Clean can also wipe the wall.
+
+**What the pet learns**
+- Every mark on the wall now remembers when it was drawn (game time).
+- A new belief, *its drawings are welcome*, is shaped by what you wipe:
+  - wiping something it drew within the last game-hour is a strong "don't";
+  - wiping marks from the same day is a milder one;
+  - wiping old marks or your own coral marks teaches nothing.
+- Stubborn pets are less put off, and a sleeping pet only half notices.
+- A pet that believes drawing is unwelcome rarely draws while you're watching, and draws a little more while you're away ("drew on the wall while you weren't looking"), including in offline life.
+- Drawings left up for six game-hours or more, and you drawing on the wall yourself, slowly rebuild the belief.
+- It reacts when it sees a fresh drawing wiped: it droops, or huffs if it's stubborn or grumpy. Watching it happen is kept as an episodic memory.
+- Wiping away the last of an older generation's drawing is noted in the Diary, and a pet that once studied it may look sad.
+
+**Other**
+- New module `game/wall.py`, 17 new tests (152 in total).
+- Saves from earlier versions load unchanged; existing drawings without a timestamp count as old.
+
 ## v1.5.1 "Menagerie" (housekeeping)
 
 - **One name everywhere.** The game is now called Nimlets throughout the code, launchers and docs (previously also "Tamagotchi Reimagined" and "Pocket Pal").

@@ -1,0 +1,1571 @@
+{
+ "world_time": 1791931628.1822863,
+ "paused": true,
+ "speed_idx": 3,
+ "sound": true,
+ "started": "2026-10-13",
+ "creature": {
+  "name": "Nebu",
+  "generation": 1,
+  "genome": {
+   "hue": 31.829384237835995,
+   "sat": 0.6606432900899748,
+   "marking": "stripes",
+   "marking_hue": 229.67915428271252,
+   "tendencies": {
+    "playfulness": 0.3422887033065311,
+    "sociability": 0.41008033505927644,
+    "curiosity": 0.5843651623874069,
+    "independence": 0.3629652581691908,
+    "stubbornness": 0.5579051724140087
+   },
+   "mutation": null,
+   "bmut": null,
+   "line": "water"
+  },
+  "species": "puddle",
+  "stage": "child",
+  "age": 55502.359000002456,
+  "stage_age": 48493.75900000176,
+  "hunger": 63.19176087499919,
+  "happiness": 36.089782611111424,
+  "energy": 81.099999999998,
+  "hygiene": 97.70416666666642,
+  "health": 100,
+  "weight": 12,
+  "discipline": 0.0,
+  "care_mistakes": 1,
+  "stage_mistakes": 0,
+  "sick": false,
+  "doses": 0,
+  "poops": 0,
+  "asleep": false,
+  "napping": false,
+  "lights_on": true,
+  "attention": null,
+  "attention_time": 1802.4000000000005,
+  "attention_counted": false,
+  "poop_timer": 1.1799784362504193,
+  "hist": {
+   "hunger": 456.89953976460123,
+   "happy": 722.497909497246,
+   "weight": 139.49505277778226,
+   "hours": 13.470488611110687
+  },
+  "stats": {
+   "meals": 3,
+   "snacks": 0,
+   "games": 0,
+   "wins": 0,
+   "cleans": 2,
+   "medicine": 0,
+   "praises": 0,
+   "scolds": 0,
+   "pets": 0
+  },
+  "forms": [
+   "dewdrop",
+   "puddle"
+  ],
+  "elder": false,
+  "departed": false,
+  "offline_neglect": false,
+  "born_at": 1791876125.8230994,
+  "quirks": [
+   {
+    "id": "sleepyhead",
+    "from": "baby"
+   },
+   {
+    "id": "observer",
+    "from": "child"
+   },
+   {
+    "id": "shy",
+    "from": "teen"
+   }
+  ],
+  "routine": [
+   0.0,
+   0.0,
+   1.0,
+   0.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.93,
+   0.93,
+   0.93
+  ],
+  "routine_mark": "810687-11",
+  "routine_day": 810687,
+  "wariness": 0.0,
+  "assoc": {
+   "medicine": 0.0,
+   "food": 0.8463966666666632,
+   "ball": 0.0
+  },
+  "last_gift_age": 0.0,
+  "beliefs": {
+   "cursor_food": {
+    "v": 0.318528,
+    "n": 3,
+    "a": null
+   },
+   "touch": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "bed_safe": {
+    "v": 0.2,
+    "n": 1,
+    "a": null
+   },
+   "toy_fun": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "objects_respond": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "room_edge": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "edge_passable": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "bowl_summons": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "time_control": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   },
+   "wall_ok": {
+    "v": 0.11410000000000001,
+    "n": 3,
+    "a": null
+   },
+   "pause_button": {
+    "v": 0.0,
+    "n": 0,
+    "a": null
+   }
+  },
+  "signals": {
+   "style": "gesture",
+   "assoc": {},
+   "learned": {},
+   "responses": {}
+  },
+  "frontier": {
+   "stage": 0,
+   "progress": 0,
+   "escapes": 0,
+   "roams": 0
+  },
+  "bmut_active": false,
+  "ritual": [
+   "sit",
+   "dance"
+  ],
+  "ritual_day": 810686,
+  "firsts": [
+   "ritual",
+   "sig:coo+look:food"
+  ],
+  "bond": {
+   "lang": {
+    "style": "gesture",
+    "repertoire": {
+     "food": [
+      "chirp2+tap",
+      "coo+look",
+      "look",
+      "push",
+      "trill+push"
+     ],
+     "play": [
+      "hop+point",
+      "look",
+      "push",
+      "trill+push",
+      "wiggle+point"
+     ],
+     "attention": [
+      "approach",
+      "chirp1+approach",
+      "coo",
+      "pause+approach",
+      "trill+look"
+     ],
+     "draw": [
+      "chirp2+point",
+      "coo+look",
+      "hop+look",
+      "pause+tap",
+      "spin+point"
+     ]
+    },
+    "stats": {
+     "food": {
+      "chirp2+tap": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo+look": {
+       "n": 1.0,
+       "s": 0.9047738456694174,
+       "m": 0
+      },
+      "look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "push": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "trill+push": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     },
+     "play": {
+      "hop+point": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "push": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "trill+push": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "wiggle+point": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     },
+     "attention": {
+      "approach": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "chirp1+approach": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "pause+approach": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "trill+look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     },
+     "draw": {
+      "chirp2+point": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "coo+look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "hop+look": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "pause+tap": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      },
+      "spin+point": {
+       "n": 0.0,
+       "s": 0.0,
+       "m": 0
+      }
+     }
+    },
+    "conventions": {},
+    "history": {},
+    "last": null
+   },
+   "gest": {
+    "left": {
+     "seen": 0,
+     "ok": 0
+    },
+    "right": {
+     "seen": 0,
+     "ok": 0
+    },
+    "side": {
+     "seen": 0,
+     "ok": 0
+    },
+    "circle": {
+     "seen": 0,
+     "ok": 0
+    },
+    "up": {
+     "seen": 0,
+     "ok": 0
+    },
+    "down": {
+     "seen": 0,
+     "ok": 0
+    },
+    "wiggle": {
+     "seen": 0,
+     "ok": 0
+    }
+   },
+   "games": {
+    "lead": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.479,
+     "today": 0
+    },
+    "catch": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.424,
+     "today": 0
+    },
+    "echo": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.389,
+     "today": 0
+    },
+    "path": {
+     "played": 0,
+     "wins": 0,
+     "best": 0,
+     "interest": 0.676,
+     "today": 0
+    }
+   },
+   "rituals": {
+    "return": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    },
+    "feed": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    },
+    "bedtime": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    },
+    "play": {
+     "counts": {},
+     "gesture": null,
+     "strength": 0.0
+    }
+   },
+   "player": {
+    "imitates": 0.0,
+    "sound": 0.1,
+    "gesture": 0.0,
+    "ball": 0.0,
+    "draws": 0.319,
+    "alone": -0.05,
+    "respects": 0.0,
+    "quick": 0.0
+   },
+   "player_gestures": {},
+   "styles": {},
+   "memories": [],
+   "daily": [
+    [
+     810686,
+     0,
+     0
+    ]
+   ],
+   "today": {
+    "day": 810687,
+    "attempts": 1,
+    "successes": 1.0
+   },
+   "streak": {
+    "intent": null,
+    "n": 0
+   },
+   "collab": 0,
+   "last_decision": "Wanted food because it was getting hungry; chose its best guess (50% expected)."
+  },
+  "observer": {
+   "zones": {
+    "room": 24,
+    "room:wall": 14,
+    "discipline": 5,
+    "shell": 24,
+    "medicine": 5,
+    "lights": 4,
+    "clean": 6,
+    "play": 3,
+    "room:bowl": 2,
+    "room:plant": 4,
+    "room:window": 3,
+    "save": 1,
+    "speed": 4,
+    "feed": 5,
+    "room:pet": 3,
+    "room:bed": 1,
+    "pause": 2
+   },
+   "trans": {
+    "room": {
+     "room:wall": 11,
+     "room:bowl": 2,
+     "shell": 9,
+     "room:window": 1,
+     "room:bed": 1
+    },
+    "room:wall": {
+     "room": 8,
+     "discipline": 1,
+     "room:plant": 1,
+     "room:window": 1,
+     "room:pet": 3
+    },
+    "discipline": {
+     "shell": 1,
+     "lights": 1,
+     "medicine": 3
+    },
+    "shell": {
+     "medicine": 1,
+     "discipline": 1,
+     "play": 3,
+     "lights": 3,
+     "clean": 2,
+     "room": 3,
+     "room:plant": 3,
+     "save": 1,
+     "speed": 2,
+     "feed": 4,
+     "pause": 1
+    },
+    "medicine": {
+     "shell": 2,
+     "clean": 3
+    },
+    "lights": {
+     "discipline": 3,
+     "shell": 1
+    },
+    "clean": {
+     "shell": 4,
+     "room:wall": 1,
+     "room:window": 1
+    },
+    "play": {
+     "medicine": 1,
+     "feed": 1,
+     "clean": 1
+    },
+    "room:bowl": {
+     "room": 2
+    },
+    "room:plant": {
+     "shell": 1,
+     "room": 3
+    },
+    "room:window": {
+     "room": 2,
+     "speed": 1
+    },
+    "save": {
+     "speed": 1
+    },
+    "speed": {
+     "shell": 3,
+     "pause": 1
+    },
+    "feed": {
+     "room": 2,
+     "shell": 1,
+     "room:wall": 2
+    },
+    "room:pet": {
+     "room": 2,
+     "shell": 1
+    },
+    "room:bed": {
+     "room": 1
+    },
+    "pause": {
+     "shell": 1
+    }
+   },
+   "assoc": {
+    "z:room:wall": {
+     "draw": 2.7,
+     "wipe": 1
+    },
+    "zz:room>room:wall": {
+     "draw": 2.7
+    },
+    "to:play": {
+     "draw": 0.85,
+     "clean": 1
+    },
+    "to:clean": {
+     "draw": 0.85,
+     "clean": 1
+    },
+    "z:lights": {
+     "lights": 3.55
+    },
+    "zz:discipline>lights": {
+     "lights": 1.7
+    },
+    "to:lights": {
+     "lights": 0.85
+    },
+    "zz:shell>lights": {
+     "lights": 1.85
+    },
+    "to:records": {
+     "lights": 0.85
+    },
+    "z:clean": {
+     "clean": 2.85
+    },
+    "zz:medicine>clean": {
+     "clean": 0.85
+    },
+    "zz:clean>room:wall": {
+     "wipe": 1
+    },
+    "to:discipline": {
+     "wipe": 1
+    },
+    "zz:shell>clean": {
+     "clean": 1
+    },
+    "to:speed": {
+     "draw": 1
+    },
+    "z:speed": {
+     "speed": 5
+    },
+    "zz:shell>speed": {
+     "speed": 5
+    },
+    "to:pause": {
+     "speed": 1,
+     "pause": 1
+    },
+    "z:feed": {
+     "feed": 4
+    },
+    "zz:play>feed": {
+     "feed": 1
+    },
+    "to:feed": {
+     "feed": 4
+    },
+    "zz:shell>feed": {
+     "feed": 3
+    },
+    "zz:play>clean": {
+     "clean": 1
+    },
+    "z:pause": {
+     "pause": 1
+    },
+    "zz:speed>pause": {
+     "pause": 1
+    }
+   },
+   "conf": {
+    "feed": 0.489,
+    "speed": 0.425
+   },
+   "hits": 1,
+   "misses": 2,
+   "acc": 0.446,
+   "log": [
+    [
+     1791926995,
+     "feed",
+     0.55,
+     1
+    ],
+    [
+     1791929975,
+     "feed",
+     0.62,
+     0
+    ],
+    [
+     1791931628,
+     "speed",
+     0.67,
+     0
+    ]
+   ],
+   "stage": 1,
+   "ms": {
+    "encounter": 1791878268.4232035
+   },
+   "speed_seen": 0,
+   "pause_seen": 0,
+   "rapid": 25.305000000000042,
+   "symbols": 0,
+   "studied": 0,
+   "day": 810687
+  },
+  "episodes": [],
+  "prituals": {
+   "counts": {
+    "eat": {
+     "hum>look": 0.941,
+     "at:bowl>look": 0.97,
+     "look>notice": 1
+    },
+    "sleep": {},
+    "play": {},
+    "return": {},
+    "signal": {
+     "hum>look": 1
+    }
+   },
+   "known": {},
+   "occ": {
+    "eat": 3,
+    "sleep": 1,
+    "play": 0,
+    "return": 0,
+    "signal": 1
+   },
+   "day": 810687
+  },
+  "spatial": {
+   "expect": {
+    "bed": 30.0
+   },
+   "pref": {
+    "bed": 30.0
+   },
+   "pref_str": {
+    "bed": 0.35
+   },
+   "adapt": {},
+   "changes": 0
+  },
+  "skills": {},
+  "mirror": {},
+  "uncanny": {},
+  "shop": {},
+  "personality": {
+   "playfulness": 0.3772769572813142,
+   "sociability": 0.47059788689471066,
+   "curiosity": 0.5397820472451449,
+   "independence": 0.29623966547999525,
+   "stubbornness": 0.6261811321266815
+  },
+  "memory": {
+   "food_likes": {
+    "rice": -0.23295825159826714,
+    "fish": 0.6960664670456516,
+    "berries": -0.3967131193411866,
+    "cake": -0.5033459105657893
+   },
+   "food_counts": {
+    "rice": 2,
+    "fish": 0,
+    "berries": 1,
+    "cake": 0
+   },
+   "game_counts": {
+    "higher_lower": 0,
+    "direction": 0,
+    "timing": 0
+   },
+   "game_wins": {
+    "higher_lower": 0,
+    "direction": 0,
+    "timing": 0
+   },
+   "attachment": 19.31660000000007,
+   "lessons": 0,
+   "habits": {},
+   "spots": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "praises": 0,
+   "scolds": 0
+  }
+ },
+ "records": {
+  "discovered": [
+   "dewdrop",
+   "puddle"
+  ],
+  "lineage": [],
+  "totals": {
+   "meals": 0,
+   "snacks": 0,
+   "games": 0,
+   "wins": 0,
+   "cleans": 0,
+   "medicine": 0,
+   "praises": 0,
+   "scolds": 0,
+   "pets": 0
+  },
+  "longest": null,
+  "rare": [],
+  "gifts": {
+   "flower": 0,
+   "leaf": 0,
+   "drawing": 0,
+   "pebble": 0
+  },
+  "coins": 0,
+  "coins_earned": 0,
+  "coins_spent": 0,
+  "bought": {}
+ },
+ "living": {
+  "gift": null
+ },
+ "world": {
+  "bed_x": 30.0,
+  "ball_x": 100.0,
+  "ball_in_bowl": false,
+  "pile": {
+   "x": 44.0,
+   "items": []
+  },
+  "mural": [
+   [
+    66,
+    56,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905620.6232502
+   ],
+   [
+    67,
+    57,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905721.4232504
+   ],
+   [
+    67,
+    58,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905721.4232504
+   ],
+   [
+    68,
+    59,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905721.4232504
+   ],
+   [
+    69,
+    60,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905741.2232504
+   ],
+   [
+    70,
+    61,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905741.2232504
+   ],
+   [
+    71,
+    61,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905741.2232504
+   ],
+   [
+    72,
+    62,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905741.2232504
+   ],
+   [
+    73,
+    63,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905741.2232504
+   ],
+   [
+    74,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905761.0232503
+   ],
+   [
+    75,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905761.0232503
+   ],
+   [
+    76,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905780.8232503
+   ],
+   [
+    77,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905780.8232503
+   ],
+   [
+    78,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905780.8232503
+   ],
+   [
+    79,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905780.8232503
+   ],
+   [
+    80,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905801.2232504
+   ],
+   [
+    81,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905801.2232504
+   ],
+   [
+    82,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905801.2232504
+   ],
+   [
+    83,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905801.2232504
+   ],
+   [
+    84,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905801.2232504
+   ],
+   [
+    85,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905801.2232504
+   ],
+   [
+    86,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    87,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    88,
+    65,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    89,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    90,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    91,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    92,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905821.0232503
+   ],
+   [
+    93,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905841.4232504
+   ],
+   [
+    94,
+    64,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905861.2232504
+   ],
+   [
+    95,
+    63,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905861.2232504
+   ],
+   [
+    96,
+    63,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905861.2232504
+   ],
+   [
+    97,
+    63,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905881.6232505
+   ],
+   [
+    98,
+    62,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905881.6232505
+   ],
+   [
+    99,
+    62,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905881.6232505
+   ],
+   [
+    100,
+    61,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905881.6232505
+   ],
+   [
+    101,
+    61,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905881.6232505
+   ],
+   [
+    102,
+    60,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905902.0232506
+   ],
+   [
+    103,
+    60,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905902.0232506
+   ],
+   [
+    104,
+    59,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905902.0232506
+   ],
+   [
+    104,
+    58,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905942.8232508
+   ],
+   [
+    104,
+    57,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905963.2232509
+   ],
+   [
+    103,
+    57,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905983.623251
+   ],
+   [
+    102,
+    57,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905983.623251
+   ],
+   [
+    101,
+    56,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905983.623251
+   ],
+   [
+    100,
+    56,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905983.623251
+   ],
+   [
+    99,
+    56,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791905983.623251
+   ],
+   [
+    98,
+    56,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    97,
+    55,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    96,
+    55,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    95,
+    55,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    94,
+    54,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    93,
+    54,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    92,
+    54,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    91,
+    53,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    90,
+    53,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    89,
+    53,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    88,
+    52,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    87,
+    52,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906004.023251
+   ],
+   [
+    86,
+    52,
+    [
+     240,
+     110,
+     96
+    ],
+    0,
+    1791906024.4232512
+   ]
+  ],
+  "mural_artists": {
+   "0": "you"
+  },
+  "inventions": [],
+  "marks": {
+   "left": 0,
+   "right": 0,
+   "glass": 0
+  },
+  "souvenirs": [],
+  "nest": false,
+  "stash": {
+   "x": 151.0,
+   "items": []
+  },
+  "loose": [],
+  "figure": null,
+  "mirror_x": 106.0,
+  "symbols": {},
+  "frame_tilt": 0
+ },
+ "journal": {
+  "entries": [
+   {
+    "id": 1,
+    "kind": "evolve",
+    "text": "The egg hatched into Nebu the Dewdrop.",
+    "wt": 1791877700.8232021,
+    "icon": "star",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 2,
+    "kind": "evolve",
+    "text": "Nebu evolved into Puddle.",
+    "wt": 1791883134.4232123,
+    "icon": "star",
+    "n": 1,
+    "important": true
+   },
+   {
+    "id": 3,
+    "kind": "ritual",
+    "text": "Nebu did its little bedtime ritual: sit, dance.",
+    "wt": 1791883846.623213,
+    "icon": "moon",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 4,
+    "kind": "dream",
+    "text": "Nebu had a strange dream.",
+    "wt": 1791891962.8232274,
+    "icon": "moon",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 5,
+    "kind": "dream",
+    "text": "Nebu had a strange dream.",
+    "wt": 1791903480.4232478,
+    "icon": "fishlegs",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 6,
+    "kind": "dream",
+    "text": "Nebu had a strange dream.",
+    "wt": 1791914975.782261,
+    "icon": "ghost",
+    "n": 1,
+    "important": false
+   },
+   {
+    "id": 7,
+    "kind": "signal",
+    "text": "Nebu tried a soft coo + a look at the bowl, then looked at you. Was it trying to tell you something?",
+    "wt": 1791920831.7822711,
+    "icon": "note",
+    "n": 1,
+    "important": false
+   }
+  ],
+  "next_id": 8,
+  "seen_id": 8
+ },
+ "version": 1,
+ "saved_at": 1791876219.3530877
+}

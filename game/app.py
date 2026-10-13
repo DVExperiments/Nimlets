@@ -85,6 +85,8 @@ class Game:
         self.in_catch_up = False
         self.ui.diary_icons = {}
         self.stroke = None          # your current drawing stroke on the wall
+        self.sponge = None          # wall-cleaning tool: {"wiping", "removed", "last", "pos"}
+        self.wall_hint = False
         self.lab_open = False
         self.neg_retry = False
 
@@ -426,6 +428,8 @@ class Game:
 
     def update(self, dt):
         c = self.c
+        if self.sponge and (self.menu or self.panel or self.blocked() or self.trip):
+            self.sponge = None
         care.tick_real(c, dt)
         if not self.paused:
             sim = dt * self.settings["base_time_scale"] * self.speed()
@@ -644,6 +648,10 @@ class Game:
         action = ACTION_IDS[idx]
         c = self.c
         self.audio.play("button")
+        if self.sponge:
+            self.end_sponge()
+            if action == "clean":
+                return
         self.mind.observer.on_action(action)
         if self.trip and action not in ("status", "records"):
             self.end_trip(hurried=True)
@@ -674,8 +682,18 @@ class Game:
             items.append(("Shop", "__shop__", f"{self.records.coins} coins"))
             self.menu = Menu("play", "Let's play!", items)
         elif action == "clean":
-            self.apply(care.clean(c))
-            self.mind.note_action("clean")
+            messy = c.poops > 0 or c.hygiene < 85
+            if messy or not self.world.mural:
+                self.apply(care.clean(c))
+                self.mind.note_action("clean")
+                if messy and self.world.mural and not self.wall_hint and c.stage != "egg":
+                    self.wall_hint = True
+                    self.say(self.message + "  Press Clean again to wipe the wall.")
+            else:
+                self.menu = Menu("clean", "Clean the wall?", [
+                    ("Sponge", "sponge", "wipe away bits"),
+                    ("Wipe it all", "wipe_all", "a fresh, blank wall")],
+                    hint="The room is already tidy.  Esc to close.")
         elif action == "medicine":
             was_sick = c.sick
             self.apply(care.medicine(c))
@@ -730,6 +748,11 @@ class Game:
             self.minigame = GAME_CLASSES[value](c, self.rng)
             self.mind.prituals.credit("play")
             self.say(self.minigame.help)
+        elif menu.kind == "clean":
+            if value == "sponge":
+                self.start_sponge()
+            else:
+                self.ask("wipe_all")
         elif menu.kind == "discipline":
             if value == "praise":
                 self.apply(care.praise(c, self.beh.last_idle))
@@ -867,6 +890,14 @@ class Game:
                 "Your pet, collection, family history and records will all be deleted.",
                 "A backup copy of the old save is kept in the saves folder."], "Erase", True, "settings"),
         }
+        if kind == "wipe_all":
+            gens = [g for g in self.world.mural_generations() if g != self.c.generation]
+            lines = ["Every mark on the wall will be wiped away - yours and your pet's."]
+            if gens:
+                names = [self.world.mural_artists.get(str(g), "an old pet") for g in gens][:3]
+                lines.append("That includes drawings left by " + ", ".join(names) + ".")
+            lines.append("This can't be undone.")
+            texts["wipe_all"] = ("Wipe the whole wall?", lines, "Wipe it", True, None)
         title, lines, yes, danger, under = texts[kind]
         self.confirm = {"kind": kind, "title": title, "lines": lines, "yes": yes,
                         "danger": danger, "under": under}
@@ -884,6 +915,11 @@ class Game:
         self.panel = None
         if ctx["kind"] == "newgen":
             self.start_depart("journey")
+        elif ctx["kind"] == "wipe_all":
+            removed = self.world.wipe_all()
+            self.audio.play("clean")
+            self.effects.sparkles(74, 60, 14, 60)
+            self.say(self.mind.on_wall_wiped(removed, all_at_once=True) or "A fresh, clean wall.")
         else:
             self.reset_game(keep_records=ctx["kind"] == "reset_soft")
 
@@ -929,6 +965,8 @@ class Game:
         elif ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
             self.user_input()
             self.on_click(ev.pos)
+        elif ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 3 and self.sponge:
+            self.end_sponge()
         elif ev.type == pygame.MOUSEBUTTONUP and ev.button == 1:
             self.finish_stroke()
         elif ev.type == pygame.MOUSEWHEEL:
@@ -939,6 +977,8 @@ class Game:
             self.user_input()
             if self.stroke is not None and self.L:
                 self.extend_stroke(self.lcd_pos(ev.pos))
+            if self.sponge and self.L:
+                self.move_sponge(self.lcd_pos(ev.pos))
             if self.drag_bed and self.L:
                 from .world import BED_RANGE
                 lx = self.lcd_pos(ev.pos)[0]
@@ -964,6 +1004,9 @@ class Game:
                 self.obs_page = (self.obs_page + (1 if key == pygame.K_RIGHT else -1)) % n
             elif key == pygame.K_e:
                 self.export_observation()
+            return
+        if self.sponge and key == pygame.K_ESCAPE:
+            self.end_sponge()
             return
         if self.panel == "away":
             if key in (pygame.K_RETURN, pygame.K_ESCAPE, pygame.K_SPACE):
@@ -1213,6 +1256,16 @@ class Game:
 
     def click_lcd(self, lx, ly):
         c, mind = self.c, self.mind
+        if self.sponge:
+            mx, my, mw, mh = MURAL_RECT
+            if mx - 4 <= lx < mx + mw + 4 and my - 4 <= ly < my + mh + 4:
+                self.sponge["wiping"] = True
+                self.sponge["last"] = None
+                self.audio.play("clean")
+                self.move_sponge((lx, ly))
+            else:
+                self.end_sponge()
+            return
         gift = self.room.gift_rect(mind)
         if gift and gift.collidepoint(lx, ly):
             kind = mind.collect_gift()
@@ -1349,6 +1402,36 @@ class Game:
         if msg:
             self.say(msg)
 
+    # ---------------------------------------------------------------- wall cleaning
+    def start_sponge(self):
+        self.sponge = {"wiping": False, "removed": [], "last": None, "pos": None}
+        self.say("Drag the sponge across the wall. Right-click, Esc or Clean when you're done.")
+
+    def end_sponge(self):
+        if not self.sponge:
+            return
+        if self.sponge["wiping"]:
+            self.finish_stroke()
+        self.sponge = None
+        self.say("Sponge away.")
+
+    def move_sponge(self, lpos):
+        sp = self.sponge
+        sp["pos"] = lpos
+        if not sp["wiping"]:
+            return
+        x, y = lpos
+        lx, ly = sp["last"] or lpos
+        n = max(1, int(max(abs(x - lx), abs(y - ly)) // 2))
+        for i in range(1, n + 1):
+            px, py = lx + (x - lx) * i / n, ly + (y - ly) * i / n
+            gone = self.world.wipe(px, py, 3.2)
+            if gone:
+                sp["removed"] += gone
+                if self.rng.random() < 0.5:
+                    self.effects.add("bubble", px, py, self.rng.uniform(-6, 6), -self.rng.uniform(6, 14), 0.9)
+        sp["last"] = lpos
+
     # ---------------------------------------------------------------- wall drawing
     def extend_stroke(self, lpos):
         if self.stroke is None or len(self.stroke) >= 60:
@@ -1368,6 +1451,13 @@ class Game:
             self.stroke += new
 
     def finish_stroke(self):
+        if self.sponge and self.sponge["wiping"]:
+            self.sponge["wiping"] = False
+            removed, self.sponge["removed"] = self.sponge["removed"], []
+            msg = self.mind.on_wall_wiped(removed)
+            if msg:
+                self.say(msg)
+            return
         if self.drag_bed:
             drag, self.drag_bed = self.drag_bed, None
             if abs(self.world.bed_x - drag["start"]) > 6:
@@ -1510,6 +1600,8 @@ class Game:
         self.room.draw_darkness(s, self.world_time, c.lights_on)
         self.effects.draw(s)
         self.room.draw_glass(s, mind)
+        if self.sponge and self.sponge["pos"]:
+            self.room.draw_sponge(s, self.sponge["pos"], self.sponge["wiping"])
         if not self.evolving and not self.departing:
             if beh.state == "sleep" and mind.dream:
                 self.room.draw_dream(s, mind.dream["icon"], x, top, t)

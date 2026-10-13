@@ -32,6 +32,7 @@ from .config import FLOOR_Y, X_MAX, X_MIN
 from .genetics import BEHAVIOURS
 from .personality import has_quirk
 from . import shop
+from . import wall
 from .episodes import Episodes
 from .existential import Existential
 from .observation import Trace
@@ -578,6 +579,12 @@ class Mind:
         beh.interject([chase(kicks=rng.randint(1, 3), tag="activity"), act("happy", 1.0)], resume=False)
         self.emo["excited"] = _clamp(self.emo["excited"] + 0.2)
 
+    def on_wall_wiped(self, removed, all_at_once=False):
+        """You wiped (part of) the wall drawing. See wall.py."""
+        if self.c is not None and removed:
+            self.observer.on_action("wipe")
+        return wall.on_wiped(self, removed, all_at_once)
+
     def on_click_sleeping(self):
         c = self.c
         self.sleep_clicks.append(self.clock)
@@ -645,6 +652,7 @@ class Mind:
         self.hour, self.weather = hour, weather
         if world_time is not None:
             self.world_time = world_time
+        self.world.now = self.world_time
         for k in self.cd:
             self.cd[k] = max(0.0, self.cd[k] - dt * (self.pace if k in SLOW_COOLDOWNS else 1.0))
         for name in ("coy_t", "sound_t", "stir_t", "peek_t", "shape_t"):
@@ -1006,6 +1014,7 @@ class Mind:
         }
         if grown:
             w["draw"] = ((0.2 + p["playfulness"] * 0.2 + (0.6 if self.mut("inventor") else 0))
+                         * wall.draw_factor(learning.belief(c, "wall_ok"), self.watched)
                          if self.cd["draw"] == 0 else 0)
             w["collect"] = ((0.15 + (1.5 if self.mut("collector") else 0) + p["curiosity"] * 0.1)
                             if not self.carrying else 0)
@@ -1384,8 +1393,15 @@ class Mind:
         elif fx == "experiment":
             self.experiment = {"name": "bowl_summons", "t": 0.0}
         elif fx == "mural":
+            if wall.survived(w, c.generation, self.world_time) >= 6:    # its last drawing was left up
+                self.learn("wall_ok", 1.0, 0.06)
             if w.add_mural(self._motif(beh.x), c.generation, c.name):
-                if self.first("first_drawing"):
+                if not self.watched and learning.belief(c, "wall_ok") < wall.SECRET_BELIEF:
+                    if self.first("secret_drawing"):
+                        self.log("draw", "drew on the wall while you weren't looking.", "drawing", important=True)
+                    else:
+                        self.log("draw", "added to its drawing while nobody was watching.", "drawing")
+                elif self.first("first_drawing"):
                     self.log("draw", "started a drawing on the wall. Nobody asked it to.", "drawing",
                              important=True)
                 else:
@@ -1678,6 +1694,7 @@ class Mind:
         for h in range(hours):
             wt = start_wt + h * 3600 + rng.uniform(0, 3600)
             self.offline_wt = wt
+            w.now = wt
             hour = time.localtime(wt).tm_hour
             if self.is_bedtime(hour):
                 if rng.random() < 0.25:
@@ -1690,7 +1707,8 @@ class Mind:
                 weather = self.weather_at(wt)
                 choice = weighted(rng, {
                     "ball": 0.6 + p["playfulness"], "window": 0.5 + (1.0 if weather in ("rain", "snow") else 0),
-                    "draw": 0.3 + (0.6 if self.mut("inventor") else 0),
+                    "draw": (0.3 + (0.6 if self.mut("inventor") else 0))
+                            * wall.draw_factor(learning.belief(c, "wall_ok"), False),
                     "collect": 0.25 + (1.5 if self.mut("collector") else 0),
                     "bed": 0.04 + (0.1 if self.q("explorer") else 0),
                     "frontier": 0.1 + (1.0 if self.mut("wanderer") else 0),
