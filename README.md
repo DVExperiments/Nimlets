@@ -1,10 +1,10 @@
 # Nimlets
 
-**Version 1.8.0 "Storybook"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 1.9.0 "Pixel Perfect"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
-Everything — creatures, room, icons and sound effects — is generated in code. No image or audio files, no internet, no server.
+Everything — creatures, room, icons, sound effects and even the pixel font — is generated in code. No image, audio or font files, no internet, no server.
 
 ## Running it (Windows)
 
@@ -71,7 +71,7 @@ Interesting things your pet does are written to a **Diary** (Records → Diary, 
 ### Settings (gear icon, or O)
 
 - **Theme colour.** Choose "Pet colour" (the device matches your pet and changes each generation), Peach, Lemon, Mint, Sky, Lavender or Rose. Use ←/→ to cycle.
-- **Appearance.** Light or Dark (**D**).
+- **Appearance.** Light or Dark (**D**), and **Pixel text** or **Smooth text**. Pixel text is the game's own pixel font; switch to smooth text if you find it easier to read.
 - **Shell.** Click the left or right half to cycle through *Match my pet* and the shells you've unlocked (see *Shells* below). Sound has its own button on the device, or press **M**.
 - **Desktop roaming** (Windows only, off by default). See "The Frontier" below.
 - **Reset.**
@@ -113,8 +113,12 @@ The device's shell is decorated, and new designs are unlocked by your family's h
 | Starlight (stars, moon, a ringed planet) | Raising a Celestine or Aurora |
 | Glitch (scanlines and stray pixels) | Raising a Glitchling |
 | Spore (mushrooms and spores) | Raising a Mycelia |
+| Patchwork (a family quilt) | Reaching generation 3 |
+| Heirloom (cream, gold and pearls) | Reaching generation 5 |
+| Family Tree (branches climbing a wooden shell) | Reaching generation 10 |
+| Golden, Void, Chimera, Pastel, Static | Hatching a Golden, Void, Chimera, Pastel or Glitch egg |
 
-New unlocks are announced and written in the Diary. By default the shell is **Match my pet**: it follows your pet's family line, or its secret form if it has one. Eggs wear Classic so the line stays a surprise. Pick a specific shell on the Records book's **Shells** page, or in Settings. Unlocks come from the collection records, so older saves get the shells they've already earned, and *Erase everything* locks them again.
+New unlocks are announced and written in the Diary. By default the shell is **Match my pet**: it follows your pet's secret form if it has one, otherwise its rare egg, otherwise its family line, using the first of those you've unlocked. Eggs wear Classic so the line stays a surprise. Pick a specific shell on the Records book's **Shells** page, or in Settings. Unlocks come from the collection records, so older saves get the shells they've already earned, and *Erase everything* locks them again.
 
 ## The Living Pet System
 
@@ -381,6 +385,7 @@ game/world.py         persistent room shared across generations (drawing, nest, 
 game/wall.py          cleaning the wall, and what the pet learns from it
 game/shells.py        decorated device shells: unlock rules, "Match my pet", drawing
 game/book.py          the Records book: the in-depth storybook version of Records
+game/pixelfont.py     the game's own pixel font, drawn in code
 game/journal.py       the behaviour diary
 game/escape.py        trips across the interface + desktop-roam launcher
 game/roam.py          optional desktop companion process (Windows)
@@ -400,6 +405,7 @@ tests/test_shop_room.py    28 forms (all reachable), coins, shop, preferences, r
 tests/test_wall.py         wall cleaning: timestamps, sponge, wipe-all, learning from wipes
 tests/test_handheld.py     handheld layout at many sizes, shells and unlocks, A/B/C, Settings picker
 tests/test_book.py         Records book: Expand, navigation, every page, shells, diary scroll, buttons
+tests/test_font_shells.py  pixel font, the 14 shells and their unlocks, every screen in both text styles
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
@@ -450,7 +456,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 170 tests cover:
+The 180 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -509,6 +515,8 @@ The 170 tests cover:
 
 - v1.8 Records book: Expand (button and E key) opens the matching section and Esc, C and close return to it, pages turn with keys, A and tabs, every section draws for an egg and a lived-in save at three window sizes, the diary scrolls within bounds, locked shells can be previewed but not worn, Wear and Match my pet change the shell, and Export, the Observation Lab and new generation work from the book
 
+- v1.9 pixel font and shells: every glyph is well formed, rendered sizes match measured sizes at every scale, unknown characters are stood in for, pixels stay crisp, the generation and rare-egg shells unlock from the records, Match my pet prefers a secret form, then a rare egg, then the family line, falling back to what's unlocked, all 14 shells draw light and dark, every screen (menus, panels, shop, Records, the book, dialogs and mini-games) draws in both text styles at three window sizes, and Settings switches the text style
+
   Also covered: deliberate watching, time awareness, real pause, episode recall and fading, the cursor drawing reaching the representation stage, tool use emerging across seeds, private stashes pausing near the cursor, mirror stages, the caretaker figure learning, the memory frame, older saves upgrading, Observation Mode pages, the "Unusual: off" switch, and log export
 
 **Headless smoke test of the real game loop:**
@@ -556,7 +564,8 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Real-time ageing, autosave, manual save, capped gentle offline progress, pause, test speeds | ✅ |
 | Resizable window, integer pixel-perfect scaling, mouse and keyboard | ✅ |
 | Handheld device UI: side tabs, hearts strip, message screen, A/B/C buttons | ✅ |
-| Six decorated shells unlocked by family history, Match my pet | ✅ |
+| 14 decorated shells unlocked by family history, generations and rare eggs; Match my pet | ✅ |
+| The game's own pixel font, drawn in code, with a smooth-text option | ✅ |
 | Records book: quick view plus an expandable six-section storybook | ✅ |
 | Programmatic chiptune SFX (20 sounds), mute toggle | ✅ |
 | Settings: theme colour (7), light/dark, sound, two reset options with confirmation and backup | ✅ |
@@ -580,12 +589,12 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 170 passing |
+| Automated tests | ✅ 180 passing |
 
 ## Known limitations (honest notes)
 
 - **The handheld UI was checked in headless screenshots,** at sizes from 640×520 up to 1920×1080 and on every shell, light and dark, but not yet on a real Windows display.
-- **The UI uses the system font,** not a pixel font, because the game ships no asset files. A bundled pixel font would match the device look more closely.
+- **Pixel text only comes in whole sizes,** so it stays crisp. Where space is tight, some small labels (secondary hints, the smallest window size) drop to the smaller size rather than being cut off. *Smooth text* in Settings is there for anyone who prefers it.
 - **The Observer was retuned for the new layout.** The tabs sit right beside the room, so the cursor crosses the room more often. Passing hovers are no longer scored as wrong guesses, and a tab only counts as the cursor's destination from the nearer half of the room. Simulated prediction accuracy is about 64% (it was about 72% with the old layout).
 
 - **Not run on Windows here.** It was developed and tested on Linux, headless (dummy video and audio drivers), with Python 3.12 (classic pygame 2.6.1 up to v1.3, pygame-ce 2.5.8 from v1.4). The code only uses cross-platform pygame-ce and standard-library features, but I could not see or hear it running on real Windows hardware.

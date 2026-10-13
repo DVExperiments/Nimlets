@@ -104,6 +104,13 @@ class Book:
             ui.text(screen, right_text, (r.right, r.y + size_up), fs - 3, SOFT, bold=True, align="right")
         return r.y + fs + size_up + 14
 
+    def shared_size(self, texts, size, maxw, bold=True):
+        """The largest size (down to a floor) at which every label in a group fits, so they match."""
+        floor = max(9, size - 6)
+        while size > floor and any(self.ui.font(size, bold).size(t)[0] > maxw for t in texts):
+            size -= 1
+        return size
+
     def small(self, screen, x, y, text, maxw=None):
         self.ui.text(screen, text.upper(), (x, y), max(10, self.fs - 5), SOFT, bold=True, maxw=maxw)
         return y + self.fs
@@ -341,11 +348,12 @@ class Book:
         y = self.small(screen, rp.x, b.bottom + 14, "Gifts your pets gave you")
         gw = (rp.w - 3 * 10) // 4
         gh = min(rp.bottom - y - 4, fs * 5)
+        gsz = self.shared_size([f"{lb} × {rec.gifts.get(k, 0)}" for k, lb in GIFTS], fs - 3, gw - 6)
         for i, (key, label) in enumerate(GIFTS):
             g = pygame.Rect(rp.x + i * (gw + 10), y + 4, gw, gh)
             self.box(screen, g)
             self._gift_icon(screen, key, (g.centerx, g.y + gh // 3), max(8, gh // 6))
-            ui.text(screen, f"{label} × {rec.gifts.get(key, 0)}", (g.centerx, g.bottom - fs - 6), fs - 3, INK,
+            ui.text(screen, f"{label} × {rec.gifts.get(key, 0)}", (g.centerx, g.bottom - fs - 6), gsz, INK,
                     bold=True, align="center", maxw=g.w - 6)
 
     def _gift_icon(self, screen, key, c, k):
@@ -419,15 +427,17 @@ class Book:
             text = e["text"] if e["text"][:1].isupper() else f"{ctx['c'].name} {e['text']}"
             if e.get("n", 1) > 1:
                 text += f" (x{e['n']})"
-            lines = ui.wrap(text, fs - 1, rp.w - fs * 5, bool(e.get("important")))
+            tcol = ui.font(fs - 4, True).size("00:00")[0] + 8         # time column, then the star, then text
+            indent = tcol + fs + 8
+            lines = ui.wrap(text, fs - 1, rp.w - indent, bool(e.get("important")))
             if y + len(lines) * (fs + 3) > rp.bottom - fs:
                 ui.text(screen, "Scroll for more", (rp.x, rp.bottom - fs + 2), max(10, fs - 5), SOFT, bold=True)
                 break
             ui.text(screen, time.strftime("%H:%M", time.localtime(e["wt"])), (rp.x, y + 2), fs - 4, SOFT, bold=True)
             if e.get("important"):
-                self._star(screen, (rp.x + fs * 3 + 2, y + fs // 2 + 1), fs // 2)
+                self._star(screen, (rp.x + tcol + fs // 2, y + fs // 2 + 1), fs // 2)
             for i, line in enumerate(lines):
-                ui.text(screen, line, (rp.x + fs * 4 + 4, y + i * (fs + 3)), fs - 1, INK, bold=bool(e.get("important")))
+                ui.text(screen, line, (rp.x + indent, y + i * (fs + 3)), fs - 1, INK, bold=bool(e.get("important")))
             y += len(lines) * (fs + 3) + 8
 
     def _star(self, screen, c, s):
@@ -511,11 +521,14 @@ class Book:
         y = self.title(screen, lp, "Shells", f"{len(have)} of {len(shells.SHELLS)} unlocked")
         sel = ctx.get("shell_sel") or "classic"
         wearing = ctx.get("shell_now")
-        cols = 3
+        cols = 3 if len(shells.ORDER) <= 9 else 4
         cw = lp.w // cols
         rows = (len(shells.ORDER) + cols - 1) // cols
         ch = (lp.bottom - y) // rows
         sw = min(cw - 16, int((ch - fs * 3 - 10) * 240 / 260))
+        names = ["???" if s_ not in have else shells.SHELLS[s_]["name"] + ("  (wearing)" if s_ == wearing else "")
+                 for s_ in shells.ORDER]
+        nsz = self.shared_size(names, fs - 1, cw - 10)
         shh = int(sw * 260 / 240)
         for i, sid in enumerate(shells.ORDER):
             cx = lp.x + (i % cols) * cw + cw // 2
@@ -528,7 +541,7 @@ class Book:
             locked = sid not in have
             self._mini(screen, sid, r, ctx, locked)
             name = "???" if locked else shells.SHELLS[sid]["name"] + ("  (wearing)" if sid == wearing else "")
-            ui.text(screen, name, (cx, r.bottom + 4), fs - 1, INK if not locked else SOFT, bold=True, align="center",
+            ui.text(screen, name, (cx, r.bottom + 4), nsz, INK if not locked else SOFT, bold=True, align="center",
                     maxw=cw - 10)
             ui.text(screen, shells.SHELLS[sid]["hint"], (cx, r.bottom + fs + 6), max(9, fs - 5), SOFT, align="center",
                     maxw=cw - 10)

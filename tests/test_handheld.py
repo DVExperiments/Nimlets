@@ -30,6 +30,7 @@ def creature(species="pipling", stage="baby", line="land"):
     rng = random.Random(1)
     c = Creature("Ari", genetics.random_genome(rng), 1, rng)
     c.genome["line"] = line
+    c.genome["mutation"] = None             # these tests are about family lines, not rare colourings
     if species != "egg":
         evolution.apply(c, species, stage, SPECIES)
     return c

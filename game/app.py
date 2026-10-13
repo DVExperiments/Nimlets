@@ -1232,6 +1232,10 @@ class Game:
                 if hit.get("dark") and hit["dark"].collidepoint(pos):
                     self.set_pref("dark", True)
                     return
+                if hit.get("text_btn") and hit["text_btn"].collidepoint(pos):
+                    self.set_pref("pixel_text", not self.prefs.get("pixel_text", True))
+                    self.audio.play("select")
+                    return
                 if hit.get("shell_btn") and hit["shell_btn"].collidepoint(pos):
                     self.cycle_shell(-1 if pos[0] < hit["shell_btn"].centerx else 1)
                     return
@@ -1868,6 +1872,7 @@ class Game:
         t = self.beh.anim_t
         self.ui.hit = {}
         self.ui.set_theme(self.theme_hue(), self.prefs.get("dark", False))
+        self.ui.pixel = self.prefs.get("pixel_text", True)
         self.ui.set_shell(shells.current(self.prefs, self.records, c), self.theme_hue(), self.prefs.get("dark", False))
         self.ui.draw_frame(screen, L)
         texts = []

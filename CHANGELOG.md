@@ -4,6 +4,34 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v1.9.0 "Pixel Perfect"
+
+**The game's own pixel font**
+- **An original pixel font,** drawn in code like the creatures, room and sounds, so there's still no font file. Most letters are 4 pixels wide, capitals 7 tall, with proper descenders.
+- **Crisp at every size:** text is drawn at whole-number scales only.
+- **Every character works:** curly quotes, dashes and the like are stood in for, and unknown characters show as "?" instead of failing.
+- **On by default.** Settings → Appearance has a *Pixel text / Smooth text* switch.
+- **Layouts adjusted for it:**
+  - the hearts strip keeps the hearts big and shrinks its labels when space is tight;
+  - Settings buttons and colour swatches size themselves to their text;
+  - the confirmation dialog wraps its explanation instead of cutting it off;
+  - shop cards, the book's gift labels and shell names each use one shared size, so they never mismatch;
+  - the diary has a proper time column;
+  - the message screen picks a smaller size before squashing a long message.
+
+**Eight new shells (14 in total)**
+- **Generation milestones:** Patchwork (generation 3), Heirloom (5) and Family Tree (10).
+- **Rare eggs:** Golden, Void, Chimera, Pastel, and Static for the rare Glitch egg.
+- **Unlocks come from the records,** so older saves get the shells they've already earned.
+- **Match my pet** now tries the secret-form shell, then the rare-egg shell, then the family line, and wears the first one you've unlocked.
+- **The Records book's Shells page** shows all 14 in four columns.
+
+**Fixes**
+- A rare-colour pet whose rare shell wasn't unlocked yet fell back to Classic instead of its family line's shell.
+
+**Tests**
+- 10 new tests (180 in total), including one that draws every screen in both text styles at three window sizes.
+
 ## v1.8.0 "Storybook"
 
 **The Records book**

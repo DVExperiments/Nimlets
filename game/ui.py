@@ -9,6 +9,7 @@ import pygame
 
 from .config import LCD_W, LCD_H
 from .memory import FOODS, GAMES
+from .pixelfont import PixelFont
 from .sprites import hsv
 
 WHITE = (255, 255, 255)
@@ -189,6 +190,11 @@ class UI:
 
     # ---- primitives -----------------------------------------------------------------
     def font(self, size, bold=False):
+        if getattr(self, "pixel", False):
+            key = ("px", size, bold)
+            if key not in self._fonts:
+                self._fonts[key] = PixelFont(size, bold)
+            return self._fonts[key]
         key = (size, bold)
         if key not in self._fonts:
             try:
@@ -198,8 +204,12 @@ class UI:
             self._fonts[key] = f
         return self._fonts[key]
 
-    def text(self, surf, s, pos, size, color=None, bold=False, align="left", maxw=None):
+    def text(self, surf, s, pos, size, color=None, bold=False, align="left", maxw=None, fit=False):
         color = color or self.t.ink
+        if fit and maxw:                      # shrink a little before cutting the text short
+            floor = max(9, size - 6)
+            while size > floor and self.font(size, bold).size(s)[0] > maxw:
+                size -= 1
         f = self.font(size, bold)
         if maxw and f.size(s)[0] > maxw:
             while len(s) > 1 and f.size(s + "...")[0] > maxw:
@@ -248,7 +258,11 @@ class UI:
             pygame.draw.rect(surf, t.select_edge, rect.inflate(4, 4), 2, border_radius=rect.h // 2 + 2)
         pygame.draw.rect(surf, col, rect, border_radius=rect.h // 2)
         ink = (255, 255, 255) if danger else (t.ink if enabled else t.ink_soft)
-        self.text(surf, label, (rect.centerx, rect.y + (rect.h - size) // 2 - 2), size, ink,
+        floor = max(9, size - 6)
+        while size > floor and self.font(size, True).size(label)[0] > rect.w - 12:
+            size -= 1                                  # shrink a little before cutting the label short
+        h = self.font(size, True).get_height()
+        self.text(surf, label, (rect.centerx, rect.centery - h // 2), size, ink,
                   bold=True, align="center", maxw=rect.w - 12)
 
     # ---- layout -----------------------------------------------------------------------
@@ -401,17 +415,26 @@ class UI:
             rows = (("HUNGER", info["hunger"], HEART_RED), ("HAPPY", info["happy"], (240, 110, 170)),
                     ("HEALTH", info["health"], (90, 210, 150)))
             sec = hr.w // 3
-            lf = self.font(fs - 5, True)
+            # hearts matter more than their labels: keep the hearts big, shrink the labels if needed
+            lsz = fs - 3 if getattr(self, "pixel", False) else fs - 5
+            while lsz > 9:
+                lf = self.font(lsz, True)
+                widest = max(lf.size(r[0])[0] for r in rows)
+                if (sec - widest - 12) // (slots * 8) >= 2:
+                    break
+                lsz -= 1
+            lf = self.font(lsz, True)
             for i, (name, n, col) in enumerate(rows):
                 x0 = hr.x + i * sec
                 if i:
                     pygame.draw.line(screen, STRIP_LINE, (x0, hr.y + 6), (x0, hr.bottom - 6), 2)
                 lw = lf.size(name)[0]
-                sc = max(1, min(3, (sec - lw - 22) // (slots * 8)))
+                widest = max(lf.size(r[0])[0] for r in rows)
+                sc = max(1, min(3, (sec - widest - 12) // (slots * 8)))      # the same size in all three
                 hw = slots * 8 * sc
-                x = x0 + (sec - (lw + 8 + hw)) // 2
-                self.text(screen, name, (x, hr.centery - (fs - 5) // 2 - 2), fs - 5, PLATE_INK, bold=True)
-                self.hearts(screen, x + lw + 8, hr.centery - 3 * sc, n, sc, slots, col, info.get("poke", 0.0),
+                x = x0 + (sec - (lw + 6 + hw)) // 2
+                self.text(screen, name, (x, hr.centery - lf.get_height() // 2), lsz, PLATE_INK, bold=True)
+                self.hearts(screen, x + lw + 6, hr.centery - 3 * sc, n, sc, slots, col, info.get("poke", 0.0),
                             empty=STRIP_EMPTY)
         else:
             self.text(screen, "Hatching soon...", (hr.centerx, hr.centery - (fs - 4) // 2 - 2), fs - 4, PLATE_INK,
@@ -451,8 +474,9 @@ class UI:
             cy = rect.centery - (1 if pressed else lip)
             pygame.draw.circle(screen, _lighten(col, 14) if rect.collidepoint(mouse) else col,
                                (rect.centerx, cy), rect.w // 2 - 1)
-            self.text(screen, name.upper(), (rect.centerx, cy - (fs + 4) // 2 - 2), fs + 4, ink, bold=True,
-                      align="center")
+            lsz = fs + 10 if getattr(self, "pixel", False) else fs + 4
+            self.text(screen, name.upper(), (rect.centerx, cy - self.font(lsz, True).get_height() // 2), lsz, ink,
+                      bold=True, align="center")
 
     def draw_buttons(self, screen, L, disabled, hover, flash=None, selected=None):
         """The action tabs down both sides of the screen."""
@@ -498,11 +522,13 @@ class UI:
         pygame.draw.rect(screen, MSG_BG, L.msg.inflate(-2, -4).move(0, 2), border_radius=max(6, L.msg.h // 4))
         if not text or alpha <= 0:
             return
-        f = self.font(L.fs, True)
-        img = f.render(text, True, MSG_INK)
-        if img.get_width() > L.msg.w - 24:
-            img = pygame.transform.smoothscale(
-                img, (L.msg.w - 24, max(8, int(img.get_height() * (L.msg.w - 24) / img.get_width()))))
+        size = L.fs
+        while size > 9 and self.font(size, True).size(text)[0] > L.msg.w - 24:
+            size -= 1
+        img = self.font(size, True).render(text, True, MSG_INK)
+        if img.get_width() > L.msg.w - 24:          # still too long: squash it (smooth text only)
+            scale = pygame.transform.scale if getattr(self, "pixel", False) else pygame.transform.smoothscale
+            img = scale(img, (L.msg.w - 24, max(8, int(img.get_height() * (L.msg.w - 24) / img.get_width()))))
         img.set_alpha(int(alpha * 255))
         screen.blit(img, img.get_rect(center=(L.msg.centerx, L.msg.centery + 1)))
 
@@ -593,6 +619,13 @@ class UI:
         ch = (grid.h - gap * (rows - 1)) // max(1, rows)
         self.hit["shop_cards"] = []
         mouse = pygame.mouse.get_pos()
+        # one name size for every card: the largest at which all the names fit
+        k0 = max(2, min(6, (ch - 3 * fs - 30) // 10))
+        name_w = cw - 12 * k0 - 40
+        name_size = fs
+        while name_size > max(9, fs - 6) and any(self.font(name_size, True).size(it["name"])[0] > name_w
+                                                 for it in items):
+            name_size -= 1
         for i, it in enumerate(items):
             card = pygame.Rect(grid.x + (i % cols) * (cw + gap), grid.y + (i // cols) * (ch + gap), cw, ch)
             if card.collidepoint(mouse):
@@ -607,7 +640,7 @@ class UI:
                 big = pygame.transform.scale(img, (img.get_width() * k, img.get_height() * k))
                 screen.blit(big, big.get_rect(midtop=(card.x + 18 + 4 * k, card.y + 14)))
             tx = card.x + 30 + 8 * k
-            self.text(screen, it["name"], (tx, card.y + 12), fs, t.ink, bold=True, maxw=card.right - tx - 10)
+            self.text(screen, it["name"], (tx, card.y + 12), name_size, t.ink, bold=True, maxw=card.right - tx - 10)
             cw2 = self.coin(screen, tx, card.y + fs + 20, 2)
             self.text(screen, str(it["price"]), (tx + cw2 + 6, card.y + fs + 16), fs - 1,
                       t.ink if it["afford"] else (210, 90, 90), bold=True)
@@ -1080,6 +1113,10 @@ class UI:
         size = max(26, min(56, (rect.w - 60) // len(THEME_SWATCHES) - 14, rect.h // 11))
         self.hit["swatches"] = []
         sx = x
+        lab_w = max(self.font(fs - 4, True).size(lbl)[0] for _, lbl in THEME_SWATCHES)
+        step = max(size + 18, lab_w + 12)
+        if x + step * len(THEME_SWATCHES) > rect.right - 20:
+            step = max(size + 8, (rect.right - 20 - x) // len(THEME_SWATCHES))
         for value, label in THEME_SWATCHES:
             hue = pet_hue if value == "pet" else value
             r = pygame.Rect(sx, y, size, size)
@@ -1092,20 +1129,28 @@ class UI:
                 paw = self.icon("status", max(1, size // 24), (hsv(hue, 0.6, 0.6), hsv(hue, 0.4, 0.85)))
                 screen.blit(paw, paw.get_rect(center=r.center))
             self.text(screen, label, (r.centerx, r.bottom + 6), fs - 4, t.ink_soft if not selected else t.ink,
-                      bold=selected, align="center")
+                      bold=selected, align="center", maxw=step - 4)
             self.hit["swatches"].append((r.inflate(8, 8), value))
-            sx += size + 18
+            sx += step
         y += size + fs + (22 if rect.h > 520 else 12)
 
         # light / dark
         self.text(screen, "Appearance", (x, y + 6), fs + 1, t.ink, bold=True)
-        bx = x + int(fs * 9)
+        lf = self.font(fs + 1, True)
+        bx = x + max(int(fs * 9), max(lf.size(n)[0] for n in ("Appearance", "Shell", "Desktop roaming",
+                                                                   "Experiments", "Reset")) + 18)
         bw = max(fs * 5, 90)
         light = pygame.Rect(bx, y, bw, fs + 18)
         dark = pygame.Rect(bx + bw + 10, y, bw, fs + 18)
         self.pill_button(screen, light, "Light", fs - 1, on=not prefs.get("dark"))
         self.pill_button(screen, dark, "Dark", fs - 1, on=bool(prefs.get("dark")))
         self.hit["light"], self.hit["dark"] = light, dark
+        pix = prefs.get("pixel_text", True)
+        tb = pygame.Rect(dark.right + 24, y, int(bw * 1.5), fs + 18)
+        if tb.right > rect.right - 20:
+            tb.x = rect.right - 20 - tb.w
+        self.pill_button(screen, tb, "Pixel text" if pix else "Smooth text", fs - 1, on=pix)
+        self.hit["text_btn"] = tb
         y += gap
 
         # shell (sound now has its own button on the device, or M)
@@ -1133,14 +1178,19 @@ class UI:
 
         # experimental behaviours, the mirror, observation mode
         self.text(screen, "Experiments", (x, y + 6), fs + 1, t.ink, bold=True)
-        ex = pygame.Rect(bx, y, bw, fs + 18)
-        mi = pygame.Rect(bx + bw + 10, y, bw, fs + 18)
-        ob = pygame.Rect(bx + 2 * (bw + 10), y, int(bw * 1.4), fs + 18)
-        self.pill_button(screen, ex, "Unusual: on" if prefs.get("experimental", True) else "Unusual: off", fs - 3,
-                         on=prefs.get("experimental", True))
-        self.pill_button(screen, mi, "Mirror: on" if prefs.get("mirror") else "Mirror: off", fs - 3,
-                         on=bool(prefs.get("mirror")))
-        self.pill_button(screen, ob, "Observation (F9)", fs - 3)
+        ex_l = "Unusual: on" if prefs.get("experimental", True) else "Unusual: off"
+        mi_l = "Mirror: on" if prefs.get("mirror") else "Mirror: off"
+        for esz in (fs - 1, fs - 3):                    # same size as the other buttons, if the row fits
+            def fit(label, minw):
+                return max(minw, self.font(esz, True).size(label)[0] + 26)
+            ex = pygame.Rect(bx, y, fit(ex_l, bw), fs + 18)
+            mi = pygame.Rect(ex.right + 10, y, fit(mi_l, bw), fs + 18)
+            ob = pygame.Rect(mi.right + 10, y, fit("Observation (F9)", int(bw * 1.4)), fs + 18)
+            if ob.right <= rect.right - 20:
+                break
+        self.pill_button(screen, ex, ex_l, esz, on=prefs.get("experimental", True))
+        self.pill_button(screen, mi, mi_l, esz, on=bool(prefs.get("mirror")))
+        self.pill_button(screen, ob, "Observation (F9)", esz)
         self.hit["exp_btn"], self.hit["mirror_btn"], self.hit["obs_btn"] = ex, mi, ob
         y += gap
 
@@ -1148,13 +1198,13 @@ class UI:
         pygame.draw.line(screen, t.panel_alt, (x, y), (rect.right - 28, y), 2)
         y += 14
         self.text(screen, "Reset", (x, y + 6), fs + 1, t.ink, bold=True)
-        rw = max(fs * 11, 200)
+        rw = max(fs * 11, 200, self.font(fs - 1, True).size("New egg (keep records)")[0] + 28)
         soft = pygame.Rect(bx, y, rw, fs + 18)
         hard = pygame.Rect(bx + rw + 10, y, rw, fs + 18)
         if hard.right > rect.right - 20:            # stack on narrow windows
             hard = pygame.Rect(bx, y + fs + 26, rw, fs + 18)
-        self.pill_button(screen, soft, "New egg (keep records)", fs - 2)
-        self.pill_button(screen, hard, "Erase everything", fs - 2, danger=True)
+        self.pill_button(screen, soft, "New egg (keep records)", fs - 1)
+        self.pill_button(screen, hard, "Erase everything", fs - 1, danger=True)
         self.hit["reset_soft"], self.hit["reset_hard"] = soft, hard
         hint_y = max(hard.bottom, soft.bottom) + 14
         if hint_y < rect.bottom - fs * 3 and rect.h > 520:
@@ -1169,15 +1219,22 @@ class UI:
     def draw_confirm(self, screen, L, title, lines, yes_label="Yes (Y)", danger=False):
         t = self.t
         fs = L.fs
-        rect = pygame.Rect(0, 0, min(L.lcd.w - 40, 540), fs * (len(lines) * 2 + 9))
+        w = min(max(L.lcd.w - 40, int(L.shell.w * 0.7)), 600, L.W - 40)
+        wrapped = []
+        for line in lines:                       # wrap, never cut: these lines explain what will happen
+            wrapped += self.wrap(line, fs - 1, w - 40) or [""]
+        lh = self.font(fs - 1).get_height() + 4
+        rect = pygame.Rect(0, 0, w, fs * 3 + 10 + len(wrapped) * lh + fs + 20 + 34)
         rect.center = L.lcd.center
+        rect.clamp_ip(pygame.Rect(0, 0, L.W, L.H))
         self.panel(screen, rect, radius=20)
         pygame.draw.rect(screen, t.select_edge, rect, 2, border_radius=20)
-        self.text(screen, title, (rect.centerx, rect.y + 16), fs + 3, t.ink, bold=True, align="center")
+        self.text(screen, title, (rect.centerx, rect.y + 16), fs + 3, t.ink, bold=True, align="center",
+                  maxw=rect.w - 30, fit=True)
         y = rect.y + fs * 3 + 10
-        for line in lines:
-            self.text(screen, line, (rect.centerx, y), fs - 1, t.ink_soft, align="center", maxw=rect.w - 30)
-            y += int(fs * 1.7)
+        for line in wrapped:
+            self.text(screen, line, (rect.centerx, y), fs - 1, t.ink_soft, align="center")
+            y += lh
         yes = pygame.Rect(0, 0, fs * 9, fs + 20)
         no = yes.copy()
         yes.bottomright = (rect.centerx - 8, rect.bottom - 16)
