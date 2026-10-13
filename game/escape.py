@@ -93,12 +93,12 @@ class Trip:
     def anchor(L, name, frac=0.0):
         if name == "bezel":
             return (L.bezel.left + 30 + (L.bezel.w - 60) * frac, L.bezel.top + 2)
-        if name == "hearts":
+        if name == "hearts":                       # standing on top of the hearts strip
             r = getattr(L, "hearts_rect", None) or L.top
-            return (r.right + 24, L.top.bottom + 4)
-        if name == "clock":
+            return (r.right - 40, r.top + 2)
+        if name == "clock":                        # just beside the clock, on the name row
             r = getattr(L, "clock_rect", None) or L.top
-            return (r.left - 26, L.top.bottom + 4)
+            return (r.left - 22, r.bottom)
         if name == "settings":
             r = L.toggles["settings"]
             return (r.centerx, r.top + 4)

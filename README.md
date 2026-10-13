@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 1.6.0 "Clean Slate"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 1.7.0 "Handheld"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -26,6 +26,8 @@ Optional standalone `.exe`: `pip install pyinstaller`, then `pyinstaller --onefi
 
 ## How to play
 
+The game looks like a little handheld device. The room is its screen, the eight action **tabs** run down both sides of it, the **hearts** sit in a strip above it, messages appear on the small green screen below it, and along the bottom are the **A / B / C** buttons with Settings and Sound on the left and Speed and Pause on the right.
+
 | Button | Key | What it does |
 |---|---|---|
 | Feed | 1 | Rice Ball, Fish, Berries (meals) or Cake (snack, more happiness, more weight). The food goes into the bowl and your pet trots over to eat it. **Shop** at the bottom of the list. |
@@ -37,9 +39,11 @@ Optional standalone `.exe`: `pip install pyinstaller`, then `pyinstaller --onefi
 | Status | 7 | Hearts, discipline, weight, age, learned favourites |
 | Records | 8 | Collection, family tree, care records, the **Diary**, **Bond** (Shared Memories and the Observation Lab), new generation |
 
+**A / B / C** (click them, or press the A, B and C keys): **A** moves along the tabs, **B** chooses the highlighted one, and **C** goes back (closes a menu or panel, or dismisses a message). In menus A moves down and B chooses; in mini-games A, B and C are left, action and right. Clicking a tab or pressing its number works as before.
+
 Other controls: **drag the bed** to move it (your pet will notice, eventually). **F9** opens Observation Mode. **Click and drag on the lower part of the wall** to draw (your marks are coral; your pet may answer). To clean the wall, press **Clean** while the room is tidy, pick **Sponge** and drag over the marks; right-click, **Esc** or **Clean** puts the sponge away. **Click the pet** to pet it. **Click the ball** to kick it. **Click a gift** to keep it. **M** toggles sound, **P** pauses time, **T** changes speed, **S** or **F5** saves, and **O** opens Settings. **Esc** closes menus. In menus, use arrows and Enter or the number keys. In mini-games, use ←/→ (or A/D) and Space.
 
-**Hearts:** the top bar shows **Hunger, Happy and Health** as rows of 6 hearts. You can change the number of slots with `heart_slots` in `config/settings.json`.
+**Hearts:** the strip above the screen shows **Hunger, Happy and Health**, 6 hearts each. You can change the number of slots with `heart_slots` in `config/settings.json`.
 
 ### Coins and the shop
 
@@ -68,7 +72,7 @@ Interesting things your pet does are written to a **Diary** (Records → Diary, 
 
 - **Theme colour.** Choose "Pet colour" (the device matches your pet and changes each generation), Peach, Lemon, Mint, Sky, Lavender or Rose. Use ←/→ to cycle.
 - **Appearance.** Light or Dark (**D**).
-- **Sound.** On or off.
+- **Shell.** Click the left or right half to cycle through *Match my pet* and the shells you've unlocked (see *Shells* below). Sound has its own button on the device, or press **M**.
 - **Desktop roaming** (Windows only, off by default). See "The Frontier" below.
 - **Reset.**
   - *New egg (keep records)* starts over but keeps your collection, family history and gifts.
@@ -79,10 +83,25 @@ Interesting things your pet does are written to a **Diary** (Records → Diary, 
 Theme choices live in `saves/preferences.json`, so they survive resets.
 
 **Tips**
-- The red **!** in the top bar and a flashing button mean it needs something. Answer within about 15 game-minutes to avoid a hidden care mistake.
+- The red **!** light beside the name and a flashing tab mean it needs something. Answer within about 15 game-minutes to avoid a hidden care mistake.
 - Sometimes it calls for attention when it needs nothing. That's mischief, so **Scold** it. Praise it right after it does something good, like winning a game or eating food it dislikes.
 - Praise it for a habit (dancing, sitting) and it will do that more often.
 - Mistakes, discipline, weight, happiness, and personality all shape what it evolves into.
+
+### Shells
+
+The device's shell is decorated, and new designs are unlocked by your family's history:
+
+| Shell | Unlocked by |
+|---|---|
+| Classic | Always available; takes the theme colour |
+| Tide (bubbles, kelp, fish) | Hatching your first Dewdrop (water line) |
+| Meadow (leaves, flowers, sprouts) | Hatching your first Pipling (land line) |
+| Starlight (stars, moon, a ringed planet) | Raising a Celestine or Aurora |
+| Glitch (scanlines and stray pixels) | Raising a Glitchling |
+| Spore (mushrooms and spores) | Raising a Mycelia |
+
+New unlocks are announced and written in the Diary. By default the shell is **Match my pet**: it follows your pet's family line, or its secret form if it has one. Eggs wear Classic so the line stays a surprise. Pick a specific shell in Settings. Unlocks come from the collection records, so older saves get the shells they've already earned, and *Erase everything* locks them again.
 
 ## The Living Pet System
 
@@ -347,6 +366,7 @@ game/observation.py   reasoning trace and exportable observation logs
 tools/devsim.py       seeded accelerated simulation with a synthetic player
 game/world.py         persistent room shared across generations (drawing, nest, inventions)
 game/wall.py          cleaning the wall, and what the pet learns from it
+game/shells.py        decorated device shells: unlock rules, "Match my pet", drawing
 game/journal.py       the behaviour diary
 game/escape.py        trips across the interface + desktop-roam launcher
 game/roam.py          optional desktop companion process (Windows)
@@ -364,6 +384,7 @@ tests/test_reciprocity.py  reciprocal intelligence tests
 tests/test_observer.py     observer update tests (one group per spec requirement)
 tests/test_shop_room.py    28 forms (all reachable), coins, shop, preferences, room objects
 tests/test_wall.py         wall cleaning: timestamps, sponge, wipe-all, learning from wipes
+tests/test_handheld.py     handheld layout at many sizes, shells and unlocks, A/B/C, Settings picker
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
@@ -414,7 +435,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 152 tests cover:
+The 164 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -469,6 +490,8 @@ The 152 tests cover:
 
 - v1.6 wall cleaning: drawings carry a timestamp, the sponge only wipes where you drag, *Wipe it all* asks first, Clean still flushes mess before offering the wall, fresh wipes teach a lesson and old ones don't, stubborn and sleeping pets learn less, secret drawing, the belief recovering, ancestors' drawings being noted, and old saves without timestamps
 
+- v1.7 handheld: the layout fits without overlaps at seven window sizes, the tabs run down both sides in order, every shell draws light and dark at every size, unlocks come from the family history, *Match my pet* follows the line and secret forms (eggs stay Classic), a locked choice falls back, hatching announces a new shell, A/B/C work as buttons and keys and do nothing when covered, the Settings picker cycles and persists, every shell renders in the running game, passing hovers aren't scored as wrong guesses, and room headings only count the near side's tabs
+
   Also covered: deliberate watching, time awareness, real pause, episode recall and fading, the cursor drawing reaching the representation stage, tool use emerging across seeds, private stashes pausing near the cursor, mirror stages, the caretaker figure learning, the memory frame, older saves upgrading, Observation Mode pages, the "Unusual: off" switch, and log export
 
 **Headless smoke test of the real game loop:**
@@ -515,6 +538,8 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Illness, medicine, recovery animation, weight effects | ✅ |
 | Real-time ageing, autosave, manual save, capped gentle offline progress, pause, test speeds | ✅ |
 | Resizable window, integer pixel-perfect scaling, mouse and keyboard | ✅ |
+| Handheld device UI: side tabs, hearts strip, message screen, A/B/C buttons | ✅ |
+| Six decorated shells unlocked by family history, Match my pet | ✅ |
 | Programmatic chiptune SFX (20 sounds), mute toggle | ✅ |
 | Settings: theme colour (7), light/dark, sound, two reset options with confirmation and backup | ✅ |
 | Living pet: cursor gaze, hover, look-away, focus-return greetings, inactivity, room clicks | ✅ |
@@ -537,9 +562,13 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 152 passing |
+| Automated tests | ✅ 164 passing |
 
 ## Known limitations (honest notes)
+
+- **The handheld UI was checked in headless screenshots,** at sizes from 640×520 up to 1920×1080 and on every shell, light and dark, but not yet on a real Windows display.
+- **The UI uses the system font,** not a pixel font, because the game ships no asset files. A bundled pixel font would match the device look more closely.
+- **The Observer was retuned for the new layout.** The tabs sit right beside the room, so the cursor crosses the room more often. Passing hovers are no longer scored as wrong guesses, and a tab only counts as the cursor's destination from the nearer half of the room. Simulated prediction accuracy is about 64% (it was about 72% with the old layout).
 
 - **Not run on Windows here.** It was developed and tested on Linux, headless (dummy video and audio drivers), with Python 3.12 (classic pygame 2.6.1 up to v1.3, pygame-ce 2.5.8 from v1.4). The code only uses cross-platform pygame-ce and standard-library features, but I could not see or hear it running on real Windows hardware.
 - **Sound** generation and playback were verified with SDL's dummy audio driver, not real speakers. If no audio device is available, the game prints a note and continues silently.

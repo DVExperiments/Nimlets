@@ -22,6 +22,7 @@ from .living import BOWL_X, GIFTS, Mind
 from .observation import export_log
 from .observer import heading_target
 from . import shop
+from . import shells
 from .reciprocity import PLAYER_INK
 from .version import VERSION
 from .world import MURAL_RECT, World
@@ -86,6 +87,8 @@ class Game:
         self.ui.diary_icons = {}
         self.stroke = None          # your current drawing stroke on the wall
         self.sponge = None          # wall-cleaning tool: {"wiping", "removed", "last", "pos"}
+        self.sel_tab = 0            # the action tab the A/B/C buttons point at
+        self.abc_t = 0.0
         self.wall_hint = False
         self.lab_open = False
         self.neg_retry = False
@@ -428,6 +431,10 @@ class Game:
 
     def update(self, dt):
         c = self.c
+        if self.abc_t > 0:
+            self.abc_t -= dt
+            if self.abc_t <= 0:
+                self.ui.abc_pressed = None
         if self.sponge and (self.menu or self.panel or self.blocked() or self.trip):
             self.sponge = None
         care.tick_real(c, dt)
@@ -544,7 +551,9 @@ class Game:
             was_egg = c.stage == "egg"
             evolution.apply(c, e["target"], e["stage"], self.species)
             self.mind.recip.on_evolve()
+            had = set(shells.unlocked(self.records))
             new = self.records.discover(e["target"], self.species)
+            new_shells = [sid for sid in shells.unlocked(self.records) if sid not in had]
             self.effects.sparkles(80, FLOOR_Y - 16, 16, 40)
             name = self.species[e["target"]]["name"]
             if was_egg:
@@ -555,6 +564,10 @@ class Game:
             else:
                 self.say(f"{c.name} evolved into {name}!" + ("  New discovery!" if new else ""))
                 self.log_entry("evolve", f"{c.name} evolved into {name}.", "star", True)
+            for sid in new_shells:
+                nm = shells.SHELLS[sid]["name"]
+                self.say(self.message + f"  New shell: {nm}!")
+                self.log_entry("shell", f"You unlocked the {nm} shell. (Settings, Shell)", "star", True)
             self.audio.play("happy")
             self.save()
         if e["t"] >= e["dur"]:
@@ -647,6 +660,7 @@ class Game:
             return
         action = ACTION_IDS[idx]
         c = self.c
+        self.sel_tab = idx
         self.audio.play("button")
         if self.sponge:
             self.end_sponge()
@@ -843,6 +857,11 @@ class Game:
         if zone is None and getattr(L, "hearts_rect", None) is not None and L.hearts_rect.collidepoint(pos):
             zone = "hearts"
         targets = {ACTION_IDS[i]: r for i, r in enumerate(L.buttons)}
+        if L.lcd.collidepoint(pos):
+            # the tabs sit right beside the room, so almost any sweep across the room points
+            # at one: only count a tab once the cursor is in the half of the room nearest it
+            left = pos[0] < L.lcd.centerx
+            targets = {k: r for k, r in targets.items() if (r.centerx < L.lcd.centerx) == left}
         targets.update({k: v for k, v in L.toggles.items() if k in ("speed", "pause")})
         heading = heading_target(pos, self.cursor_vel, targets) if zone not in targets else None
         return zone or "shell", heading
@@ -1005,6 +1024,10 @@ class Game:
             elif key == pygame.K_e:
                 self.export_observation()
             return
+        abc = {pygame.K_a: "a", pygame.K_b: "b", pygame.K_c: "c"}.get(key)
+        if abc and not self.minigame:
+            self.press_abc(abc)
+            return
         if self.sponge and key == pygame.K_ESCAPE:
             self.end_sponge()
             return
@@ -1132,8 +1155,12 @@ class Game:
             elif hit.get("no") and hit["no"].collidepoint(pos):
                 self.confirm_answer(False)
             return
-        for name, rect in L.toggles.items():
+        for name, rect in (L.abc.items() if not self.panel else ()):
             if rect.collidepoint(pos):
+                self.press_abc(name)
+                return
+        for name, rect in (L.toggles.items() if not self.panel or self.panel == "settings" else ()):
+            if rect.collidepoint(pos) and not (self.panel and self.ui.hit.get("settings_panel", pygame.Rect(0, 0, 0, 0)).collidepoint(pos)):
                 if self.trip and name == "settings" and self.trip.steps[self.trip.i]["at"][0] == "settings":
                     self.trip.startled = True
                     self.trip.recall()
@@ -1188,8 +1215,8 @@ class Game:
                 if hit.get("dark") and hit["dark"].collidepoint(pos):
                     self.set_pref("dark", True)
                     return
-                if hit.get("sound_btn") and hit["sound_btn"].collidepoint(pos):
-                    self.toggle("sound")
+                if hit.get("shell_btn") and hit["shell_btn"].collidepoint(pos):
+                    self.cycle_shell(-1 if pos[0] < hit["shell_btn"].centerx else 1)
                     return
                 if hit.get("exp_btn") and hit["exp_btn"].collidepoint(pos):
                     on = not self.prefs.get("experimental", True)
@@ -1401,6 +1428,63 @@ class Game:
         msg = mind.on_room_poke(obj)
         if msg:
             self.say(msg)
+
+    # ---------------------------------------------------------------- shells & A/B/C
+    def shell_choice(self):
+        choice = self.prefs.get("shell", "match")
+        return choice if choice in shells.options(self.records) else "match"
+
+    def cycle_shell(self, d):
+        opts = shells.options(self.records)
+        i = opts.index(self.shell_choice())
+        self.set_pref("shell", opts[(i + d) % len(opts)])
+        self.audio.play("select")
+
+    def press_abc(self, name):
+        """The three device buttons: A moves along the tabs, B selects, C goes back."""
+        self.ui.abc_pressed, self.abc_t = name, 0.15
+        self.user_input()
+        if self.sponge:
+            if name == "c":
+                self.end_sponge()
+            return
+        if self.panel == "confirm":
+            if name == "c":
+                self.confirm_answer(False)
+            elif name == "b" and self.confirm and not self.confirm.get("danger"):
+                self.confirm_answer(True)
+            return
+        if self.panel == "away":
+            if name in ("b", "c"):
+                self.close_away()
+            return
+        if self.minigame:
+            cmd = {"a": "left", "b": "action", "c": "right"}[name]
+            if cmd != "action" or self.minigame.game_id == "timing":
+                self.audio.play(self.minigame.on_input(cmd) or "select")
+            return
+        if self.menu:
+            if name == "a":
+                self.menu.move(1)
+                self.audio.play("select")
+            elif name == "b":
+                self.menu_select()
+            else:
+                self.menu = None
+            return
+        if self.panel:
+            if name == "c":
+                self.panel = None
+                self.audio.play("button")
+            return
+        if name == "a":
+            self.sel_tab = (self.sel_tab + 1) % len(ACTION_IDS)
+            self.audio.play("select")
+        elif name == "b":
+            self.do_action(self.sel_tab)
+        else:
+            self.msg_t = min(self.msg_t, 0.3)       # C: dismiss the message
+            self.audio.play("button")
 
     # ---------------------------------------------------------------- wall cleaning
     def start_sponge(self):
@@ -1673,6 +1757,7 @@ class Game:
         t = self.beh.anim_t
         self.ui.hit = {}
         self.ui.set_theme(self.theme_hue(), self.prefs.get("dark", False))
+        self.ui.set_shell(shells.current(self.prefs, self.records, c), self.theme_hue(), self.prefs.get("dark", False))
         self.ui.draw_frame(screen, L)
         texts = []
         if self.minigame:
@@ -1697,7 +1782,7 @@ class Game:
             flash = {"hungry": "feed", "bored": "play", "sick": "medicine", "dark": "lights"}.get(c.attention)
         elif c.attention == "lights" and int(t * 2) % 2 == 0:
             flash = "lights"
-        self.ui.draw_buttons(screen, L, disabled, self.hover, flash)
+        self.ui.draw_buttons(screen, L, disabled, self.hover, flash, self.sel_tab)
         self.ui.draw_message(screen, L, self.message, min(1.0, self.msg_t))
         self.draw_outside(screen, L)
         under = self.confirm["under"] if (self.panel == "confirm" and self.confirm) else self.panel
@@ -1710,7 +1795,10 @@ class Game:
             self.ui.draw_records(screen, L, self.records, c, self.records_tab,
                                  self.can_new_generation(), info)
         elif under == "settings":
-            prefs = dict(self.prefs, _roam_supported=ROAM_SUPPORTED, _version=VERSION)
+            have = shells.unlocked(self.records)
+            prefs = dict(self.prefs, _roam_supported=ROAM_SUPPORTED, _version=VERSION,
+                         _shell_label=shells.label(self.shell_choice()),
+                         _shell_hint=f"{len(have)} of {len(shells.SHELLS)} shells unlocked. More appear as your family grows.")
             prefs.setdefault("experimental", True)
             self.ui.draw_settings(screen, L, prefs, c.genome.get("hue", 200), self.audio.enabled)
         if self.panel == "shop":

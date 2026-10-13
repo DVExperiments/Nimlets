@@ -95,6 +95,8 @@ class Observer:
         if zone is not None:
             o["ms"].setdefault("encounter", m.world_time)
         changed = False
+        if zone != self.zone and zone is not None and self.prediction and _trivial(self.prediction):
+            self.prediction = None    # it was only "the cursor is on the thing", and the cursor moved on
         if zone != self.zone and zone is not None:
             o["zones"][zone] = o["zones"].get(zone, 0) + 1
             if self.zone:
@@ -190,8 +192,7 @@ class Observer:
         if not pred or self.cd["anticipate"] > 0 or m.recip.busy() or not m.experimental():
             return
         # trivial "predictions" (the cursor is already on the thing) aren't worth acting on
-        if pred["key"].startswith("z:room:") and pred["key"].split(":")[-1] in ("pet", "ball", "wall") and \
-                pred["action"] in ("pet", "ball", "draw"):
+        if _trivial(pred):
             return
         if self.stage() < 3 and self.o["hits"] < 3:
             return
@@ -392,6 +393,12 @@ class Observer:
                            if self.prediction else "-"),
             "time": f"speed changes seen {o['speed_seen']}, unpauses seen {o['pause_seen']}",
         }
+
+
+def _trivial(pred):
+    """A prediction that only says "the cursor is on the pet/ball/wall, so: that"."""
+    return (pred["key"].startswith("z:room:") and pred["key"].split(":")[-1] in ("pet", "ball", "wall")
+            and pred["action"] in ("pet", "ball", "draw"))
 
 
 def heading_target(pos, vel, rects, max_dist=420):

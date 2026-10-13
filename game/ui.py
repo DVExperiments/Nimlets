@@ -3,6 +3,8 @@
 Everything here is drawing + hit-testing. Game logic lives in app.py.
 All colours come from the active Theme (light/dark x any hue).
 """
+import math
+
 import pygame
 
 from .config import LCD_W, LCD_H
@@ -117,7 +119,22 @@ COIN_ROWS = [".####.", "#oo#o#", "#o#oo#", "#o#oo#", "#oo#o#", ".####."]
 
 ACTION_IDS = ["feed", "play", "clean", "medicine", "discipline", "lights", "status", "records"]
 ACTION_LABELS = ["Feed", "Play", "Clean", "Medicine", "Train", "Lights", "Status", "Records"]
-TOGGLES = ("settings", "save", "speed", "pause", "sound")
+TOGGLES = ("settings", "sound", "speed", "pause")
+TAB_LABELS = ["FEED", "PLAY", "CLEAN", "MEDS", "TRAIN", "LIGHT", "STATUS", "BOOK"]
+TAB_COLORS = {"feed": (242, 184, 162), "play": (244, 213, 141), "clean": (169, 212, 232), "medicine": (242, 167, 181),
+              "discipline": (201, 227, 166), "lights": (233, 220, 160), "status": (230, 184, 216),
+              "records": (196, 189, 232)}
+ABC_COLORS = {"a": ((244, 211, 106), (210, 173, 62), (92, 69, 16)), "b": ((255, 138, 155), (217, 99, 122), (90, 26, 40)),
+              "c": ((143, 217, 192), (95, 183, 155), (22, 74, 58))}
+SCREEN_DARK = (43, 34, 64)
+STRIP_LINE = (67, 55, 94)
+STRIP_EMPTY = (93, 81, 120)
+PLATE_INK = (245, 240, 255)
+MSG_BG, MSG_LIP, MSG_INK = (201, 214, 168), (167, 181, 133), (47, 58, 28)
+
+
+def _lighten(col, d):
+    return tuple(min(255, v + d) for v in col)
 
 
 def pixel_icon(rows, main, second, scale):
@@ -201,9 +218,9 @@ class UI:
             self._icons[key] = pixel_icon(ICONS[name], main, second, scale)
         return self._icons[key]
 
-    def hearts(self, surf, x, y, n, scale, slots=4, color=HEART_RED, wobble=0.0):
+    def hearts(self, surf, x, y, n, scale, slots=4, color=HEART_RED, wobble=0.0, empty=None):
         for i in range(slots):
-            col = color if i < n else self.t.heart_empty
+            col = color if i < n else (empty or self.t.heart_empty)
             key = ("heart", col, scale)
             if key not in self._icons:
                 self._icons[key] = pixel_icon(HEART_ROWS, col, col, scale)
@@ -236,49 +253,103 @@ class UI:
 
     # ---- layout -----------------------------------------------------------------------
     def layout(self, W, H):
+        """The handheld device (v1.7): a decorated shell, the screen in the middle with
+        action tabs down both sides, hearts above, a message line below, and the
+        A/B/C buttons flanked by the utility buttons along the bottom."""
         L = Layout()
-        m = max(10, int(min(W, H) * 0.02))
         L.W, L.H = W, H
-        L.shell = pygame.Rect(m, m, W - 2 * m, H - 2 * m)
-        L.fs = max(13, min(22, int(H * 0.022)))
-        top_h = max(66, int(H * 0.1))
-        btn_h = max(64, int(H * 0.12))
-        msg_h = max(26, int(L.fs * 1.9))
-        inner_x, inner_w = L.shell.x + 18, L.shell.w - 36
-        L.top = pygame.Rect(inner_x, L.shell.y + 10, inner_w, top_h)
-        area = pygame.Rect(inner_x, L.top.bottom + 8, inner_w,
-                           L.shell.h - top_h - btn_h - msg_h - 46)
-        L.scale = max(1, min((area.w - 24) // LCD_W, (area.h - 24) // LCD_H))
+        m = max(8, int(min(W, H) * 0.015))
+        sw = min(W - 2 * m, int((H - 2 * m) * 1.35))
+        sh = min(H - 2 * m, int(sw / 1.05))
+        L.shell = pygame.Rect(0, 0, sw, sh)
+        L.shell.center = (W // 2, H // 2)
+        L.radii = (min(int(sh * 0.2), sw // 4), int(sh * 0.12))
+        L.fs = fs = max(13, min(22, int(H * 0.022)))
+        px = max(30, int(sw * 0.06))
+        pad_top, pad_bottom = max(18, int(sh * 0.05)), max(16, int(sh * 0.045))
+        name_h, hearts_h = fs + 14, fs + 16
+        msg_h = int(fs * 1.9) + 4
+        btn_h = max(48, min(84, int(sh * 0.095)))
+        g = max(6, int(sh * 0.014))
+        L.tab_w = tab_w = max(64, min(124, int(sw * 0.11)))
+        pad = max(8, int(min(W, H) * 0.012))
+        avail_h = sh - pad_top - pad_bottom - name_h - hearts_h - msg_h - btn_h - 4 * g
+        avail_w = sw - 2 * px - 2 * tab_w
+        L.scale = max(1, min((avail_w - 2 * pad) // LCD_W, (avail_h - 2 * pad) // LCD_H))
         L.lcd = pygame.Rect(0, 0, LCD_W * L.scale, LCD_H * L.scale)
-        L.lcd.center = area.center
-        L.bezel = L.lcd.inflate(24, 24)
-        L.msg = pygame.Rect(inner_x, L.bezel.bottom + 6, inner_w, msg_h)
-        gap = 8
-        bw = (inner_w - gap * 7) / 8.0
-        by = L.shell.bottom - btn_h - 12
-        L.buttons = [pygame.Rect(int(inner_x + i * (bw + gap)), by, int(bw), btn_h) for i in range(8)]
-        ts = max(28, min(top_h - 18, 46, int(W * 0.055)))
+        bez_h = L.lcd.h + 2 * pad
+        used = name_h + hearts_h + bez_h + msg_h + btn_h + 4 * g
+        y = L.shell.y + pad_top + max(0, (sh - pad_top - pad_bottom - used) // 2)
+        inner_x, inner_w = L.shell.x + px, sw - 2 * px
+        L.top = pygame.Rect(inner_x, y, inner_w, name_h)
+        y += name_h + g
+        L.hearts_rect = pygame.Rect(0, y, L.lcd.w + 2 * pad, hearts_h)
+        L.hearts_rect.centerx = L.shell.centerx
+        y += hearts_h + g
+        L.bezel = pygame.Rect(0, y, L.lcd.w + 2 * pad, bez_h)
+        L.bezel.centerx = L.shell.centerx
+        L.lcd.center = L.bezel.center
+        tg = max(4, bez_h // 60)
+        th = (bez_h - 3 * tg) // 4
+        L.buttons = []
+        for side in (0, 1):
+            x = L.bezel.left - tab_w if side == 0 else L.bezel.right
+            for i in range(4):
+                L.buttons.append(pygame.Rect(x, L.bezel.y + i * (th + tg), tab_w, th))
+        y = L.bezel.bottom + g
+        L.msg = pygame.Rect(0, y, L.bezel.w, msg_h)
+        L.msg.centerx = L.shell.centerx
+        y += msg_h + g
+        # bottom row: [settings sound]  A B C  [speed pause]
+        b = btn_h
+        a = int(b * 0.85)
+        u = max(30, int(b * 0.62))
+        gap_abc, gap_u, gap_grp = int(b * 0.38), max(6, int(u * 0.22)), int(b * 0.55)
+        total = 4 * u + 2 * gap_u + 2 * gap_grp + 2 * a + b + 2 * gap_abc
+        if total > inner_w:                         # very narrow: tighten the spacing
+            k = inner_w / total
+            gap_abc, gap_grp, gap_u = int(gap_abc * k), int(gap_grp * k), int(gap_u * k)
+            total = 4 * u + 2 * gap_u + 2 * gap_grp + 2 * a + b + 2 * gap_abc
+        cy = y + b // 2
+        x = L.shell.centerx - total // 2
         L.toggles = {}
-        for i, name in enumerate(reversed(TOGGLES)):
-            L.toggles[name] = pygame.Rect(L.top.right - (i + 1) * (ts + 6), L.top.y + (top_h - ts) // 2, ts, ts)
+        for name in ("settings", "sound"):
+            L.toggles[name] = pygame.Rect(x, cy - u // 2, u, u)
+            x += u + gap_u
+        x += gap_grp - gap_u
+        L.abc = {}
+        for name, d in (("a", a), ("b", b), ("c", a)):
+            L.abc[name] = pygame.Rect(x, cy - d // 2, d, d)
+            x += d + gap_abc
+        x += gap_grp - gap_abc
+        for name in ("speed", "pause"):
+            L.toggles[name] = pygame.Rect(x, cy - u // 2, u, u)
+            x += u + gap_u
+        L.controls = pygame.Rect(L.shell.centerx - total // 2, y, total, b)
         return L
+
+    def set_shell(self, sid, hue, dark):
+        self.shell_id, self.shell_hue, self.shell_dark = sid, hue, dark
 
     # ---- frame --------------------------------------------------------------------------
     def draw_frame(self, screen, L):
-        t = self.t
-        key = (L.W, L.H, t.bg_top, t.bg_bottom)
-        if self._bg is None or self._bg_key != key:
-            self._bg = pygame.Surface((L.W, L.H))
-            for y in range(L.H):
-                k = y / max(1, L.H - 1)
-                col = tuple(int(a + (b - a) * k) for a, b in zip(t.bg_top, t.bg_bottom))
-                pygame.draw.line(self._bg, col, (0, y), (L.W, y))
+        from . import shells
+        sid = getattr(self, "shell_id", "classic")
+        hue = getattr(self, "shell_hue", 200)
+        dark = getattr(self, "shell_dark", self.t.dark)
+        self.pal = pal = shells.palette(sid, hue, dark)
+        screen.fill(pal["page"])
+        key = (sid, int(hue) if sid == "classic" else 0, dark, L.shell.size, L.radii)
+        if self._bg_key != key:
+            self._bg = shells.shell_surface(sid, L.shell.size, L.radii, hue, dark)
             self._bg_key = key
-        screen.blit(self._bg, (0, 0))
-        self.panel(screen, L.shell, t.shell, radius=34)
-        pygame.draw.rect(screen, t.shell_edge, L.shell, 3, border_radius=34)
-        pygame.draw.rect(screen, t.bezel, L.bezel, border_radius=20)
-        pygame.draw.rect(screen, t.bezel_edge, L.bezel, 3, border_radius=20)
+        sh = pygame.Surface(L.shell.size, pygame.SRCALPHA)
+        pygame.draw.rect(sh, (40, 30, 70, 60), sh.get_rect(), border_top_left_radius=L.radii[0],
+                         border_top_right_radius=L.radii[0], border_bottom_left_radius=L.radii[1],
+                         border_bottom_right_radius=L.radii[1])
+        screen.blit(sh, (L.shell.x, L.shell.y + 10))
+        screen.blit(self._bg, L.shell.topleft)
+        pygame.draw.rect(screen, SCREEN_DARK, L.bezel, border_radius=max(8, L.bezel.h // 22))
 
     def draw_lcd_texts(self, screen, L, texts):
         for text, x, y, size, color, align in texts:
@@ -287,102 +358,153 @@ class UI:
                       bold=True, align=align)
 
     def draw_top(self, screen, L, info):
-        t = self.t
-        fs = L.fs
-        x, y = L.top.x + 6, L.top.y + 4
-        self.text(screen, info["name"], (x, y + 2), fs + 5, t.ink, bold=True, maxw=L.top.w * 0.22)
-        self.text(screen, info["subtitle"], (x, y + fs + 14), fs - 2, t.ink_soft, maxw=L.top.w * 0.24)
-        hx = L.top.x + int(L.top.w * (0.22 if L.W < 800 else 0.25))
-        slots = info.get("slots", 6)
-        row_h = max(16, (L.top.h - 6) // 3)
-        sc = max(2, min(3, (row_h - 4) // 6))
-        if L.W < 800:
-            sc = 2
-        label_w = int(fs * 4.6)
-        L.hearts_rect = pygame.Rect(hx, y, label_w + slots * 8 * sc, row_h * 3)
-        if info["show_hearts"]:
-            rows = (("Hunger", info["hunger"], HEART_RED), ("Happy", info["happy"], (240, 110, 170)),
-                    ("Health", info["health"], (80, 190, 130)))
-            for r, (label, n, col) in enumerate(rows):
-                ry = y + r * row_h
-                self.text(screen, label, (hx, ry + (row_h - fs) // 2 - 1), fs - 2, t.ink_soft, bold=True)
-                self.hearts(screen, hx + label_w, ry + (row_h - 6 * sc) // 2, n, sc, slots, col,
-                            info.get("poke", 0.0))
-        ax = L.hearts_rect.right + 12
+        """Name plate, attention light and clock; the hearts strip; the bottom controls."""
+        t, fs = self.t, L.fs
+        pal = getattr(self, "pal", None) or {"plate": (90, 80, 120), "util": (200, 200, 220), "util_lip": (150, 150, 170)}
+        # name plate, centred, with the attention light to its left
+        label = f"{info['name']}  \u00b7  {info['subtitle'].replace('  -  ', '  \u00b7  ')}".upper()
+        f = self.font(fs - 1, True)
+        maxw = int(L.top.w * 0.62)
+        tw = min(maxw, f.size(label)[0])
+        plate = pygame.Rect(0, 0, tw + 28, L.top.h)
+        plate.center = L.top.center
+        pygame.draw.rect(screen, pal["plate"], plate, border_radius=L.top.h // 2)
+        self.text(screen, label, (plate.centerx, plate.y + (plate.h - fs) // 2 - 2), fs - 1, PLATE_INK, bold=True,
+                  align="center", maxw=maxw)
+        led = pygame.Rect(0, 0, L.top.h - 6, L.top.h - 6)
+        led.midright = (plate.left - 10, plate.centery)
         if info["attention"]:
-            r = pygame.Rect(ax, y + row_h - 4, fs + 10, fs + 10)
-            pygame.draw.rect(screen, (240, 90, 100), r, border_radius=8)
-            self.text(screen, "!", (r.centerx, r.y + 1), fs + 2, WHITE, bold=True, align="center")
-        first = min(r.x for r in L.toggles.values())
-        tx = first - 12
-        f = self.font(fs - 2)
-        if tx - f.size(info["clock"])[0] > L.hearts_rect.right + fs + 22:
-            a = self.text(screen, info["age"], (tx, y + 4), fs - 1, t.ink, bold=True, align="right")
-            cl = self.text(screen, info["clock"], (tx, y + fs + 12), fs - 2, t.ink_soft, align="right")
-            L.clock_rect = a.union(cl)
-        else:      # narrow window: keep the clock, drop the weekday
-            short = info["clock"].split()[-1]
-            cl = self.text(screen, short, (tx, y + fs // 2 + 6), fs - 2, t.ink, bold=True, align="right")
-            L.clock_rect = cl
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 160)
+            glow = pygame.Surface((led.w * 2, led.h * 2), pygame.SRCALPHA)
+            pygame.draw.circle(glow, (255, 90, 110, int(70 + 80 * pulse)), (led.w, led.h), led.w)
+            screen.blit(glow, glow.get_rect(center=led.center))
+            pygame.draw.circle(screen, (255, 90, 110), led.center, led.w // 2)
+            self.text(screen, "!", (led.centerx, led.y + (led.h - fs) // 2 - 3), fs, WHITE, bold=True, align="center")
+        else:
+            pygame.draw.circle(screen, tuple(max(0, v - 40) for v in pal["plate"]), led.center, led.w // 3)
+        # clock on the right of the same row
+        f2 = self.font(fs - 3, True)
+        clock = f"{info['age']}  \u00b7  {info['clock']}"
+        if f2.size(clock)[0] + 20 > L.top.right - plate.right - 16:
+            clock = info["clock"].split()[-1]
+        cw = f2.size(clock)[0] + 20
+        pill = pygame.Rect(L.top.right - cw, L.top.y + 3, cw, L.top.h - 6)
+        pygame.draw.rect(screen, pal["plate"], pill, border_radius=pill.h // 2)
+        self.text(screen, clock, (pill.centerx, pill.y + (pill.h - fs + 3) // 2 - 2), fs - 3, PLATE_INK,
+                  bold=True, align="center")
+        L.clock_rect = pill
+        # hearts strip: three equal sections with dividers
+        hr = L.hearts_rect
+        pygame.draw.rect(screen, SCREEN_DARK, hr, border_radius=max(6, hr.h // 3))
+        if info["show_hearts"]:
+            slots = info.get("slots", 6)
+            rows = (("HUNGER", info["hunger"], HEART_RED), ("HAPPY", info["happy"], (240, 110, 170)),
+                    ("HEALTH", info["health"], (90, 210, 150)))
+            sec = hr.w // 3
+            lf = self.font(fs - 5, True)
+            for i, (name, n, col) in enumerate(rows):
+                x0 = hr.x + i * sec
+                if i:
+                    pygame.draw.line(screen, STRIP_LINE, (x0, hr.y + 6), (x0, hr.bottom - 6), 2)
+                lw = lf.size(name)[0]
+                sc = max(1, min(3, (sec - lw - 22) // (slots * 8)))
+                hw = slots * 8 * sc
+                x = x0 + (sec - (lw + 8 + hw)) // 2
+                self.text(screen, name, (x, hr.centery - (fs - 5) // 2 - 2), fs - 5, PLATE_INK, bold=True)
+                self.hearts(screen, x + lw + 8, hr.centery - 3 * sc, n, sc, slots, col, info.get("poke", 0.0),
+                            empty=STRIP_EMPTY)
+        else:
+            self.text(screen, "Hatching soon...", (hr.centerx, hr.centery - (fs - 4) // 2 - 2), fs - 4, PLATE_INK,
+                      bold=True, align="center")
+        self.draw_controls(screen, L, info, pal)
+
+    def draw_controls(self, screen, L, info, pal):
+        fs = L.fs
         mouse = pygame.mouse.get_pos()
         for name, rect in L.toggles.items():
             if info.get("poke_toggle") == name:
                 rect = rect.move(0, 2 if int(pygame.time.get_ticks() / 90) % 2 else 0)
             hover = rect.collidepoint(mouse)
-            pygame.draw.rect(screen, t.button_hover if hover else t.button, rect, border_radius=10)
-            pygame.draw.rect(screen, t.shell_edge, rect, 2, border_radius=10)
+            lip = max(3, rect.h // 12)
+            pygame.draw.circle(screen, pal["util_lip"], rect.center, rect.w // 2)
+            pygame.draw.circle(screen, _lighten(pal["util"], 18) if hover else pal["util"],
+                               (rect.centerx, rect.centery - lip), rect.w // 2 - 1)
             if name == "sound":
                 icon = "sound_on" if info["sound"] else "sound_off"
             elif name == "pause":
                 icon = "resume" if info["paused"] else "pause"
             else:
                 icon = name
-            sc2 = max(2, (rect.w - 10) // 8)
-            img = self.icon(icon, sc2, (t.icon_ink, (190, 200, 230)))
-            screen.blit(img, img.get_rect(center=rect.center))
+            sc2 = max(2, (rect.w - 14) // 10)
+            img = self.icon(icon, sc2, (SCREEN_DARK, (190, 200, 230)))
+            screen.blit(img, img.get_rect(center=(rect.centerx, rect.centery - lip)))
             if info.get("poke_toggle") == name:          # your pet is pressing this button
-                pygame.draw.rect(screen, (255, 210, 120), rect, 3, border_radius=10)
+                pygame.draw.circle(screen, (255, 210, 120), rect.center, rect.w // 2 + 2, 3)
             if name == "speed" and info["speed"] != 1:
-                self.text(screen, f"{info['speed']}x", (rect.centerx, rect.bottom + 1), fs - 4,
+                self.text(screen, f"{info['speed']}x", (rect.centerx, rect.bottom + 1), fs - 5,
                           (220, 80, 90), bold=True, align="center")
+        for name, rect in L.abc.items():
+            col, lip_col, ink = ABC_COLORS[name]
+            lip = max(4, rect.h // 12)
+            pressed = getattr(self, "abc_pressed", None) == name
+            pygame.draw.circle(screen, lip_col, rect.center, rect.w // 2)
+            cy = rect.centery - (1 if pressed else lip)
+            pygame.draw.circle(screen, _lighten(col, 14) if rect.collidepoint(mouse) else col,
+                               (rect.centerx, cy), rect.w // 2 - 1)
+            self.text(screen, name.upper(), (rect.centerx, cy - (fs + 4) // 2 - 2), fs + 4, ink, bold=True,
+                      align="center")
 
-    def draw_buttons(self, screen, L, disabled, hover, flash=None):
-        t = self.t
+    def draw_buttons(self, screen, L, disabled, hover, flash=None, selected=None):
+        """The action tabs down both sides of the screen."""
         fs = L.fs
         for i, rect in enumerate(L.buttons):
             name = ACTION_IDS[i]
             off = name in disabled
-            col = t.button if not off else t.button_off
-            if hover == i and not off:
-                col = t.button_hover
-            r = rect.move(0, -2) if hover == i and not off else rect
-            self.panel(screen, r, col, radius=16, shadow=not off)
-            if flash == name:
-                pygame.draw.rect(screen, (250, 120, 120), r, 3, border_radius=16)
-            sc = max(2, min(4, int(r.h * 0.45) // 12))
-            img = self.icon(name, sc)
+            left = i < 4
+            col = TAB_COLORS[name]
+            if off:
+                col = tuple(int(v * 0.55 + 200 * 0.45) for v in col)
+            elif hover == i:
+                col = _lighten(col, 16)
+            r = rect.move(-3 if left else 3, 0) if hover == i and not off else rect
+            corners = (dict(border_top_left_radius=14, border_bottom_left_radius=14) if left
+                       else dict(border_top_right_radius=14, border_bottom_right_radius=14))
+            pygame.draw.rect(screen, col, r, **corners)
+            if selected == i:
+                pygame.draw.rect(screen, SCREEN_DARK, r, 3, **corners)
+            sc = max(2, min(4, int(min(r.h * 0.42, r.w * 0.36)) // 12))
+            img = self.icon(name, sc, (SCREEN_DARK, col))
             if off:
                 img = img.copy()
-                img.set_alpha(80)
-            screen.blit(img, img.get_rect(midtop=(r.centerx, r.y + int(r.h * 0.12))))
-            self.text(screen, ACTION_LABELS[i], (r.centerx, r.bottom - fs - 8), fs - 1,
-                      t.ink if not off else t.ink_soft, bold=True, align="center")
-            self.text(screen, str(i + 1), (r.x + 8, r.y + 4), fs - 5, t.ink_soft)
+                img.set_alpha(90)
+            label = TAB_LABELS[i]
+            lsz = max(10, fs - 4)
+            block = img.get_height() + 4 + lsz
+            top = r.centery - block // 2 - 2
+            screen.blit(img, img.get_rect(midtop=(r.centerx, top)))
+            self.text(screen, label, (r.centerx, top + img.get_height() + 2), lsz,
+                      SCREEN_DARK if not off else (110, 104, 120), bold=True, align="center", maxw=r.w - 6)
+            self.text(screen, str(i + 1), (r.x + (8 if left else r.w - 8), r.y + 4), max(9, fs - 7), SCREEN_DARK,
+                      align="left" if left else "right")
+            if flash == name:
+                pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 140)
+                pygame.draw.rect(screen, (229, 72, 77), r, 3, **corners)
+                pygame.draw.circle(screen, (229, 72, 77), (r.x + (r.w - 12 if left else 12), r.y + 12),
+                                   int(5 + 2 * pulse))
 
     def draw_message(self, screen, L, text, alpha):
+        """The little green message screen under the room."""
+        pygame.draw.rect(screen, MSG_LIP, L.msg, border_radius=max(6, L.msg.h // 4))
+        pygame.draw.rect(screen, MSG_BG, L.msg.inflate(-2, -4).move(0, 2), border_radius=max(6, L.msg.h // 4))
         if not text or alpha <= 0:
             return
         f = self.font(L.fs, True)
-        img = f.render(text, True, self.t.ink)
-        if img.get_width() > L.msg.w - 30:
+        img = f.render(text, True, MSG_INK)
+        if img.get_width() > L.msg.w - 24:
             img = pygame.transform.smoothscale(
-                img, (L.msg.w - 30, int(img.get_height() * (L.msg.w - 30) / img.get_width())))
-        box = img.get_rect(center=L.msg.center).inflate(30, 10)
-        bubble = pygame.Surface(box.size, pygame.SRCALPHA)
-        pygame.draw.rect(bubble, self.t.msg_bg, bubble.get_rect(), border_radius=box.h // 2)
-        bubble.blit(img, img.get_rect(center=(box.w // 2, box.h // 2)))
-        bubble.set_alpha(int(alpha * 255))
-        screen.blit(bubble, box)
+                img, (L.msg.w - 24, max(8, int(img.get_height() * (L.msg.w - 24) / img.get_width()))))
+        img.set_alpha(int(alpha * 255))
+        screen.blit(img, img.get_rect(center=(L.msg.centerx, L.msg.centery + 1)))
 
     # ---- menus -------------------------------------------------------------------------------
     def draw_menu(self, screen, L, menu):
@@ -932,6 +1054,7 @@ class UI:
         rect = pygame.Rect(L.shell.x + 14, L.top.bottom + 6, L.shell.w - 28, L.shell.bottom - L.top.bottom - 20)
         gap = fs + (34 if rect.h > 520 else 22)
         self.panel(screen, rect, radius=22)
+        self.hit["settings_panel"] = rect
         self._close_button(screen, rect, fs)
         x, y = rect.x + 28, rect.y + 18
         self.text(screen, "Settings", (x, y), fs + 8, t.ink, bold=True)
@@ -971,11 +1094,14 @@ class UI:
         self.hit["light"], self.hit["dark"] = light, dark
         y += gap
 
-        # sound
-        self.text(screen, "Sound", (x, y + 6), fs + 1, t.ink, bold=True)
-        snd = pygame.Rect(bx, y, bw * 2 + 10, fs + 18)
-        self.pill_button(screen, snd, "Sound on  (M)" if sound_on else "Sound off  (M)", fs - 1, on=sound_on)
-        self.hit["sound_btn"] = snd
+        # shell (sound now has its own button on the device, or M)
+        self.text(screen, "Shell", (x, y + 6), fs + 1, t.ink, bold=True)
+        shl = pygame.Rect(bx, y, bw * 2 + 10, fs + 18)
+        self.pill_button(screen, shl, "<   " + prefs.get("_shell_label", "Match my pet") + "   >", fs - 1, on=True)
+        self.hit["shell_btn"] = shl
+        if shl.right + 20 < rect.right - 200:
+            self.text(screen, prefs.get("_shell_hint", ""), (shl.right + 14, y + 8), fs - 4, t.ink_soft,
+                      maxw=rect.right - shl.right - 40)
         y += gap
 
         # desktop roaming (opt-in, Windows only)

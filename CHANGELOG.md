@@ -4,6 +4,38 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v1.7.0 "Handheld"
+
+**A new look: the handheld device**
+- **The window is now a little handheld device.** The room is its screen, with the eight actions as coloured tabs down both sides (Feed, Play, Clean and Meds on the left; Train, Light, Status and Book on the right).
+- **A hearts strip** above the screen, with Hunger, Happy and Health in three equal sections.
+- **A green message screen** below the screen.
+- **A name plate** with an attention light, and the day and clock beside it.
+- **A / B / C buttons** along the bottom, flanked by Settings and Sound on the left and Speed and Pause on the right:
+  - A moves along the tabs, B chooses and C goes back. The highlighted tab is outlined.
+  - In menus A moves and B chooses; C closes menus, panels and dialogs; in mini-games they are left, action and right.
+  - The A, B and C keys do the same.
+- The layout scales from 640×520 to large windows and keeps its proportions in very wide or tall ones.
+
+**Decorated shells**
+- **Six shells, all drawn in code:** Classic, Tide, Meadow, Starlight, Glitch and Spore.
+- **Unlocked by your family history:** the first egg of each line and each secret form. Unlocks come from the collection records, so older saves get the shells they've already earned.
+- **Unlocks are announced** in the message line and the Diary.
+- **"Match my pet" is the default.** It follows the pet's line or secret form; eggs wear Classic so the line stays a surprise.
+- **Choose a shell** in Settings → Shell.
+- **Classic follows the theme colour,** and dark mode dims every shell.
+
+**Changes**
+- **Settings:** the Sound row is replaced by the Shell picker. The device has a sound button, and M still toggles sound.
+- **No Save button on the device.** S, F5 and autosave are unchanged.
+- **Escape trips** now stand on the hearts strip, beside the clock and on the Settings button.
+- **The Observer was adjusted for the new layout:**
+  - a "you're about to pet me" guess is withdrawn, not scored as wrong, when the cursor just passes over;
+  - a tab only counts as the cursor's destination once the cursor is in the nearer half of the room.
+
+**Tests**
+- 12 new tests (164 in total).
+
 ## v1.6.0 "Clean Slate"
 
 **Cleaning the wall**
