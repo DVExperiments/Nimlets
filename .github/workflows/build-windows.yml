@@ -1,0 +1,40 @@
+# Builds Nimlets.exe on GitHub's own Windows machines.
+#  - Publishing a GitHub Release builds the .exe and attaches the zip to that release.
+#  - "Run workflow" on the Actions tab builds it on demand (download it from the run's Artifacts).
+name: Build Windows .exe
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write          # needed to attach the zip to the release
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install what the build needs
+        run: python -m pip install --upgrade -r requirements.txt pyinstaller
+
+      - name: Test, build and smoke-test
+        run: python tools/build_exe.py
+
+      - name: Keep the build (Actions tab, Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nimlets-windows
+          path: dist/*.zip
+
+      - name: Attach the zip to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" (Get-ChildItem dist\*.zip).FullName --clobber
