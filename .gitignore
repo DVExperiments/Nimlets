@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Player saves and generated files (example_save.json is kept)
+saves/*
+!saves/example_save.json
+
+# Build output and release zips (publish zips as GitHub Releases instead)
+build/
+dist/
+*.spec
+*.zip
+
+# OS clutter
+.DS_Store
+Thumbs.db
+desktop.ini
