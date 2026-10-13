@@ -4,6 +4,22 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v1.8.0 "Storybook"
+
+**The Records book**
+- **The quick Records panel works as before,** and now has an **Expand** button (or press **E**). It opens the full Records book: an open storybook over the whole window, with six coloured section tabs.
+- **Collection:** every form at a comfortable size, with silhouettes and hidden secrets. The facing page has progress bars for the Pipling line, the Dewdrop line and the secrets, a hint, the longest life and rare finds.
+- **Family:** every generation with its sprite, evolution path, lifespan and how its life ended. The current pet has its personality, family line, markings, colouring, what the family left in the room, and *Begin a new generation*.
+- **Care:** this life's records and favourites, totals across generations, coins, and the gifts your pets gave you.
+- **Diary:** the signals you share and a box of moments worth remembering. The full diary is grouped by day, newest first, with important moments starred, and scrolls.
+- **Bond:** Shared Memories as a timeline. The facing page shows how your pet sees you, drawn as simple bars, plus its language and rituals, with buttons for the Observation Lab and *Export report*.
+- **Shells:** every shell drawn small with your live screen inside, and locked ones showing a padlock and their hint. Preview any shell, *Wear this shell*, or tick *Match my pet*.
+- **Navigation:** turn pages with the tabs, Left/Right or A. Esc, C or the close button return to the quick view on the matching section.
+
+**Other**
+- **The quick view's tabs** now shrink to leave room for Expand and the close button. At smaller window sizes the tabs had been crowding the close button.
+- 6 new tests (170 in total).
+
 ## v1.7.0 "Handheld"
 
 **A new look: the handheld device**

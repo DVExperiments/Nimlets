@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 1.7.0 "Handheld"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 1.8.0 "Storybook"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -37,7 +37,7 @@ The game looks like a little handheld device. The room is its screen, the eight 
 | Train | 5 | **Praise** good behaviour, **Scold** mischief |
 | Lights | 6 | Turn the lights off when it sleeps |
 | Status | 7 | Hearts, discipline, weight, age, learned favourites |
-| Records | 8 | Collection, family tree, care records, the **Diary**, **Bond** (Shared Memories and the Observation Lab), new generation |
+| Records | 8 | A quick view on the screen: Collection, family tree, care records, the **Diary**, **Bond** (Shared Memories and the Observation Lab), new generation. **Expand** (or **E**) opens the full Records book. |
 
 **A / B / C** (click them, or press the A, B and C keys): **A** moves along the tabs, **B** chooses the highlighted one, and **C** goes back (closes a menu or panel, or dismisses a message). In menus A moves down and B chooses; in mini-games A, B and C are left, action and right. Clicking a tab or pressing its number works as before.
 
@@ -88,6 +88,19 @@ Theme choices live in `saves/preferences.json`, so they survive resets.
 - Praise it for a habit (dancing, sitting) and it will do that more often.
 - Mistakes, discipline, weight, happiness, and personality all shape what it evolves into.
 
+### The Records book
+
+The Records button shows a **quick view** right on the screen. Press **Expand** (or **E**) for the full **Records book**: an open storybook over the whole window, with six coloured tabs.
+
+- **Collection** shows every form, with silhouettes for ones you haven't met. The facing page tracks progress on each family line and the secrets, your longest-lived pet and your rare finds.
+- **Family** lists every generation, with its sprite, evolution path, lifespan and how its life ended. The facing page covers the current pet: personality, family line, markings, colouring, what earlier generations left in the room, and *Begin a new generation*.
+- **Care** has this life's care records and favourites, totals across every generation, coins, and the gifts your pets gave you.
+- **Diary** shows the signals you share and the moments worth remembering, plus the full diary grouped by day with important moments starred. Scroll with the mouse wheel or Up and Down.
+- **Bond** holds your Shared Memories as a timeline. The facing page shows how your pet sees you, its language, its rituals, and buttons for the Observation Lab and *Export report*.
+- **Shells** shows every shell, with the locked ones' hints. Preview one, *Wear this shell*, or tick *Match my pet*.
+
+Turn pages with the tabs, Left and Right, or **A**. **Esc**, **C** or the close button go back to the quick view.
+
 ### Shells
 
 The device's shell is decorated, and new designs are unlocked by your family's history:
@@ -101,7 +114,7 @@ The device's shell is decorated, and new designs are unlocked by your family's h
 | Glitch (scanlines and stray pixels) | Raising a Glitchling |
 | Spore (mushrooms and spores) | Raising a Mycelia |
 
-New unlocks are announced and written in the Diary. By default the shell is **Match my pet**: it follows your pet's family line, or its secret form if it has one. Eggs wear Classic so the line stays a surprise. Pick a specific shell in Settings. Unlocks come from the collection records, so older saves get the shells they've already earned, and *Erase everything* locks them again.
+New unlocks are announced and written in the Diary. By default the shell is **Match my pet**: it follows your pet's family line, or its secret form if it has one. Eggs wear Classic so the line stays a surprise. Pick a specific shell on the Records book's **Shells** page, or in Settings. Unlocks come from the collection records, so older saves get the shells they've already earned, and *Erase everything* locks them again.
 
 ## The Living Pet System
 
@@ -367,6 +380,7 @@ tools/devsim.py       seeded accelerated simulation with a synthetic player
 game/world.py         persistent room shared across generations (drawing, nest, inventions)
 game/wall.py          cleaning the wall, and what the pet learns from it
 game/shells.py        decorated device shells: unlock rules, "Match my pet", drawing
+game/book.py          the Records book: the in-depth storybook version of Records
 game/journal.py       the behaviour diary
 game/escape.py        trips across the interface + desktop-roam launcher
 game/roam.py          optional desktop companion process (Windows)
@@ -385,6 +399,7 @@ tests/test_observer.py     observer update tests (one group per spec requirement
 tests/test_shop_room.py    28 forms (all reachable), coins, shop, preferences, room objects
 tests/test_wall.py         wall cleaning: timestamps, sponge, wipe-all, learning from wipes
 tests/test_handheld.py     handheld layout at many sizes, shells and unlocks, A/B/C, Settings picker
+tests/test_book.py         Records book: Expand, navigation, every page, shells, diary scroll, buttons
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
@@ -435,7 +450,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 164 tests cover:
+The 170 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -492,6 +507,8 @@ The 164 tests cover:
 
 - v1.7 handheld: the layout fits without overlaps at seven window sizes, the tabs run down both sides in order, every shell draws light and dark at every size, unlocks come from the family history, *Match my pet* follows the line and secret forms (eggs stay Classic), a locked choice falls back, hatching announces a new shell, A/B/C work as buttons and keys and do nothing when covered, the Settings picker cycles and persists, every shell renders in the running game, passing hovers aren't scored as wrong guesses, and room headings only count the near side's tabs
 
+- v1.8 Records book: Expand (button and E key) opens the matching section and Esc, C and close return to it, pages turn with keys, A and tabs, every section draws for an egg and a lived-in save at three window sizes, the diary scrolls within bounds, locked shells can be previewed but not worn, Wear and Match my pet change the shell, and Export, the Observation Lab and new generation work from the book
+
   Also covered: deliberate watching, time awareness, real pause, episode recall and fading, the cursor drawing reaching the representation stage, tool use emerging across seeds, private stashes pausing near the cursor, mirror stages, the caretaker figure learning, the memory frame, older saves upgrading, Observation Mode pages, the "Unusual: off" switch, and log export
 
 **Headless smoke test of the real game loop:**
@@ -540,6 +557,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Resizable window, integer pixel-perfect scaling, mouse and keyboard | ✅ |
 | Handheld device UI: side tabs, hearts strip, message screen, A/B/C buttons | ✅ |
 | Six decorated shells unlocked by family history, Match my pet | ✅ |
+| Records book: quick view plus an expandable six-section storybook | ✅ |
 | Programmatic chiptune SFX (20 sounds), mute toggle | ✅ |
 | Settings: theme colour (7), light/dark, sound, two reset options with confirmation and backup | ✅ |
 | Living pet: cursor gaze, hover, look-away, focus-return greetings, inactivity, room clicks | ✅ |
@@ -562,7 +580,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 164 passing |
+| Automated tests | ✅ 170 passing |
 
 ## Known limitations (honest notes)
 

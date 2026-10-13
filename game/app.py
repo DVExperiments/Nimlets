@@ -23,6 +23,7 @@ from .observation import export_log
 from .observer import heading_target
 from . import shop
 from . import shells
+from .book import Book, SECTIONS as BOOK_SECTIONS
 from .reciprocity import PLAYER_INK
 from .version import VERSION
 from .world import MURAL_RECT, World
@@ -96,6 +97,9 @@ class Game:
         self.menu = None
         self.panel = None
         self.records_tab = 0
+        self.book_tab = 0           # the expanded Records book (v1.8)
+        self.book_scroll = 0
+        self.book_shell = None
         self.minigame = None
         self.evolving = None
         self.departing = None
@@ -989,6 +993,8 @@ class Game:
         elif ev.type == pygame.MOUSEBUTTONUP and ev.button == 1:
             self.finish_stroke()
         elif ev.type == pygame.MOUSEWHEEL:
+            if self.panel == "book" and self.book_tab == 3:
+                self.scroll_book(-ev.y * 2)
             if self.panel == "records" and self.records_tab == 3:
                 limit = max(0, len(self.journal.entries) - 3)
                 self.diary_scroll = max(0, min(limit, self.diary_scroll - ev.y * 2))
@@ -1092,6 +1098,17 @@ class Game:
                 self.set_pref("dark", not self.prefs.get("dark"))
             elif key == pygame.K_m:
                 self.toggle("sound")
+            return
+        if self.panel == "book":
+            if key in (pygame.K_ESCAPE, pygame.K_RETURN):
+                self.close_book()
+            elif key in (pygame.K_TAB, pygame.K_RIGHT, pygame.K_LEFT):
+                self.turn_page(-1 if key == pygame.K_LEFT else 1)
+            elif key in (pygame.K_UP, pygame.K_DOWN) and self.book_tab == 3:
+                self.scroll_book(1 if key == pygame.K_DOWN else -1)
+            return
+        if self.panel == "records" and key == pygame.K_e:
+            self.open_book()
             return
         if self.panel:
             if key in (pygame.K_ESCAPE, pygame.K_RETURN):
@@ -1250,7 +1267,13 @@ class Game:
                 if hit.get("reset_hard") and hit["reset_hard"].collidepoint(pos):
                     self.ask("reset_hard")
                     return
+            if self.panel == "book":
+                self.click_book(pos)
+                return
             if self.panel == "records":
+                if hit.get("expand") and hit["expand"].collidepoint(pos):
+                    self.open_book()
+                    return
                 for i, r in enumerate(hit.get("tabs", [])):
                     if r.collidepoint(pos):
                         self.records_tab = i
@@ -1429,6 +1452,88 @@ class Game:
         if msg:
             self.say(msg)
 
+    # ---------------------------------------------------------------- the Records book
+    QUICK_TO_BOOK = {0: 0, 1: 1, 2: 2, 3: 3, 4: 4}
+
+    def open_book(self, tab=None):
+        """Expand the quick Records panel into the full storybook."""
+        self.book_tab = self.QUICK_TO_BOOK.get(self.records_tab, 0) if tab is None else tab
+        self.book_scroll = 0
+        self.book_shell = shells.current(self.prefs, self.records, self.c)
+        if self.book_tab == 3:
+            self.journal.mark_seen()
+        self.panel = "book"
+        self.audio.play("page")
+
+    def close_book(self):
+        """Back to the quick view, on the matching tab where there is one."""
+        back = {v: k for k, v in self.QUICK_TO_BOOK.items()}
+        self.records_tab = back.get(self.book_tab, self.records_tab)
+        self.panel = "records"
+        self.audio.play("button")
+
+    def turn_page(self, d):
+        self.book_tab = (self.book_tab + d) % len(BOOK_SECTIONS)
+        self.book_scroll = 0
+        if self.book_tab == 3:
+            self.journal.mark_seen()
+        self.audio.play("page")
+
+    def scroll_book(self, d):
+        limit = max(0, len(self.journal.entries) - 3)
+        self.book_scroll = max(0, min(limit, self.book_scroll + d))
+
+    def draw_book(self, screen, L, info):
+        c = self.c
+        if not hasattr(self, "book"):
+            self.book = Book(self.ui)
+        bond = {"memories": self.mind.recip.b["memories"] if c.stage != "egg" else [],
+                "player": dict(self.mind.recip.b["player"]) if c.stage != "egg" else {},
+                "lab_sections": self.mind.recip.lab() if (c.stage != "egg" and self.book_tab == 4) else []}
+        ctx = {"tab": self.book_tab, "c": c, "db": self.species, "records": self.records, "renderer": self.renderer,
+               "world": self.world, "journal": self.journal, "phrasebook": info.get("phrasebook"), "info": info,
+               "bond": bond, "scroll": self.book_scroll, "can_new_gen": self.can_new_generation(),
+               "shell_sel": self.book_shell or shells.current(self.prefs, self.records, c),
+               "shell_now": shells.current(self.prefs, self.records, c), "shell_choice": self.shell_choice(),
+               "hue": self.theme_hue(), "lcd": self.lcd}
+        self.book.draw(screen, L, ctx)
+
+    def click_book(self, pos):
+        hit = self.ui.hit
+        if hit.get("book_close") and hit["book_close"].collidepoint(pos):
+            self.close_book()
+            return
+        for i, r in enumerate(hit.get("book_tabs", [])):
+            if r.collidepoint(pos):
+                if i != self.book_tab:
+                    self.turn_page(i - self.book_tab)
+                return
+        for r, sid in hit.get("book_shells", []):
+            if r.collidepoint(pos):
+                self.book_shell = sid
+                self.audio.play("select")
+                return
+        if hit.get("book_use") and hit["book_use"].collidepoint(pos):
+            self.set_pref("shell", self.book_shell)
+            self.audio.play("happy")
+            return
+        if hit.get("book_match") and hit["book_match"].collidepoint(pos):
+            on = self.shell_choice() != "match"
+            self.set_pref("shell", "match" if on else shells.current(self.prefs, self.records, self.c))
+            self.audio.play("select")
+            return
+        if hit.get("book_newgen") and hit["book_newgen"].collidepoint(pos):
+            self.ask("newgen")
+            return
+        if hit.get("book_lab") and hit["book_lab"].collidepoint(pos):
+            self.records_tab, self.lab_open, self.panel = 4, True, "records"
+            self.audio.play("page")
+            return
+        if hit.get("book_export") and hit["book_export"].collidepoint(pos):
+            folder = os.path.dirname(os.path.abspath(self.save_path))
+            path = self.mind.recip.report(folder)
+            self.say(f"Report saved: {os.path.basename(path)} (in the saves folder)")
+
     # ---------------------------------------------------------------- shells & A/B/C
     def shell_choice(self):
         choice = self.prefs.get("shell", "match")
@@ -1471,6 +1576,12 @@ class Game:
                 self.menu_select()
             else:
                 self.menu = None
+            return
+        if self.panel == "book":
+            if name == "c":
+                self.close_book()
+            elif name == "a":
+                self.turn_page(1)
             return
         if self.panel:
             if name == "c":
@@ -1801,6 +1912,8 @@ class Game:
                          _shell_hint=f"{len(have)} of {len(shells.SHELLS)} shells unlocked. More appear as your family grows.")
             prefs.setdefault("experimental", True)
             self.ui.draw_settings(screen, L, prefs, c.genome.get("hue", 200), self.audio.enabled)
+        if self.panel == "book":
+            self.draw_book(screen, L, info)
         if self.panel == "shop":
             items = []
             for k in self.shop_items():

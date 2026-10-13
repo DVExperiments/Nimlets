@@ -708,14 +708,28 @@ class UI:
         self.panel(screen, rect, radius=22)
         self._close_button(screen, rect, fs)
         tabs = ["Collection", "Family", "Records", "Diary", "Bond"]
+        # Expand (to the full Records book) sits between the tabs and the close button
+        ef = self.font(fs - 2, True)
+        exp = pygame.Rect(0, 0, ef.size("Expand")[0] + 26, fs + 16)
+        exp.topright = (rect.right - fs * 2 - 18, rect.y + 14)
+        self.pill_button(screen, exp, "Expand", fs - 2, on=True)
+        self.hit["expand"] = exp
+        room = exp.left - 12 - (rect.x + 20)
+        tsz, pad = fs, 30
+        while tsz > 9:
+            f = self.font(tsz, True)
+            if sum(f.size(n)[0] + pad for n in tabs) + 8 * (len(tabs) - 1) <= room:
+                break
+            tsz -= 1
+            pad = max(14, pad - 4)
+        f = self.font(tsz, True)
         self.hit["tabs"] = []
         tx = rect.x + 20
         for i, name in enumerate(tabs):
-            f = self.font(fs, True)
-            w = f.size(name)[0] + 30
+            w = f.size(name)[0] + pad
             r = pygame.Rect(tx, rect.y + 14, w, fs + 16)
             pygame.draw.rect(screen, t.tab_on if i == tab else t.panel_alt, r, border_radius=12)
-            self.text(screen, name, (r.centerx, r.y + 7), fs, t.ink, bold=True, align="center")
+            self.text(screen, name, (r.centerx, r.y + (r.h - tsz) // 2 - 2), tsz, t.ink, bold=True, align="center")
             self.hit["tabs"].append(r)
             tx += w + 8
         body = pygame.Rect(rect.x + 20, rect.y + fs + 44, rect.w - 40, rect.h - fs - 60)
