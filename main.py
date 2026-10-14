@@ -11,6 +11,10 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-if __name__ == "__main__":
+if sys.platform == "emscripten":                      # the web version (built with pygbag)
+    import asyncio
+    from game.app import main_async
+    asyncio.run(main_async([]))
+elif __name__ == "__main__":
     from game.app import main
     main(sys.argv[1:])

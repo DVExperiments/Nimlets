@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 2.1.0 "Welcome"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 2.2.0 "Web Ready"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -41,6 +41,15 @@ Players don't need Python: they just run **Nimlets.exe**. There are two ways to 
 - **On GitHub:** publish a **Release** and GitHub builds the .exe on its own Windows machines and attaches the zip to that release, usually within ten minutes. You can also build on demand from the **Actions** tab (*Build Windows .exe* → *Run workflow*) and download it from the run's *Artifacts*. The recipe is `.github/workflows/build-windows.yml`.
 
 If any test fails, no build is made. Always change the code and rebuild; never edit a build. Windows may show "Windows protected your PC" the first time someone runs the .exe, because it isn't signed with a paid certificate; *More info → Run anyway* starts it.
+
+## Playing in a browser (and on phones)
+
+The same game also runs in a web browser, built with [pygbag](https://pypi.org/project/pygbag/). GitHub builds it and publishes it on **GitHub Pages** every time the main branch changes, so there's a link anyone can open on a computer, tablet or phone.
+
+- **One-time setup:** in the repo's *Settings → Pages → Build and deployment*, set *Source* to **GitHub Actions**. The workflow is `.github/workflows/build-web.yml`; the address appears on the run's summary in the *Actions* tab.
+- **On your own computer:** `python tools/build_web.py --serve` builds it and serves it at http://localhost:8000. pygbag downloads its browser runtime while building, so this needs an internet connection.
+- **In the browser your pet is saved in the browser itself.** Clearing the site's data clears your pet, and a browser save is separate from the one on your computer. Reports and logs can't be exported from the browser version yet.
+- **Work in progress:** the web version plays like the desktop one for now. Touch controls and a phone layout come next.
 
 ## How to play
 
@@ -431,10 +440,13 @@ tests/test_font_shells.py  pixel font, the 14 shells and their unlocks, every sc
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
 tools/make_icon.py    writes assets/icon.png and the multi-size assets/icon.ico for the .exe
 tools/build_exe.py    builds the standalone game: tests, icon, PyInstaller, smoke test, release zip
+tools/build_web.py    builds the web version with pygbag (packs only main.py, game/ and config/)
 build_exe.bat         one-click build on Windows (installs what it needs, then runs build_exe.py)
 .github/workflows/build-windows.yml   builds the .exe on GitHub for every Release
+.github/workflows/build-web.yml       builds the web version and publishes it on GitHub Pages
 tests/test_build_ready.py  the Nimlets data folder, copying old saves, the test save, the icon
 tests/test_welcome.py      the welcome tour, holding time, skipping, replaying, and the one-time hints
+tests/test_web.py          the async loop, saving to browser storage, web mode, and what the web build packs
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
 dv-project.json       metadata for the DV Experiments dashboard
@@ -484,7 +496,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 193 tests cover:
+The 199 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -548,6 +560,8 @@ The 193 tests cover:
 - v2.0 build-ready: the Nimlets data folder on Windows, macOS and Linux (and the override), old saves copied once without ever overwriting a newer save, the game saving to the data folder with a separate test save, a wander touring the device without leaving the window, and the icon drawing at every size with a valid multi-size .ico
 
 - v2.1 welcome: a new player gets the tour and time holds still without touching their own pause, pages turn with keys, A/B/C and buttons, skipping, existing players never see it unless they ask, every page draws in both text styles at three sizes, each hint shows once, hints never interrupt another message, and what triggers each hint
+
+- v2.2 web-ready: saves and preferences going to browser storage instead of files (with the backup fallback), the game in web mode (no folder buttons, friendly messages for exports, reopening the page restores the pet), the async loop, saving when the window loses focus, the web build packing only the game, and every preference surviving a restart
 
 The whole suite is also run at simulated times of day (night, morning, noon, evening), so no test depends on the real clock.
 
@@ -618,6 +632,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Saves in a per-user Nimlets folder, with a one-time copy of old saves | ✅ |
 | App icon drawn in code, with a multi-size .ico | ✅ |
 | First-time welcome tour and one-time hints for new players | ✅ |
+| Web version (browser, incl. phones) built with pygbag and published on GitHub Pages | ⚠️ Runs like desktop; touch and phone layout to come |
 | Reciprocal intelligence: gestures, two-way imitation, 4 pet-led games, private language (4 levels), experiments on the player, repair, negotiation, boundaries, rituals, drawing together, player model | ✅ |
 | Shared Memories + Observation Lab + report export | ✅ |
 | Versioned releases + CHANGELOG | ✅ |
@@ -626,9 +641,11 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 193 passing |
+| Automated tests | ✅ 199 passing |
 
 ## Known limitations (honest notes)
+
+- **The web version couldn't be built here.** pygbag fetches its browser runtime from the internet while building, which my build environment can't reach. Everything up to that point is tested (the async loop, browser saves, web mode, and what gets packed), and GitHub's machines do the full build.
 
 - **The handheld UI was checked in headless screenshots,** at sizes from 640×520 up to 1920×1080 and on every shell, light and dark, but not yet on a real Windows display.
 - **Pixel text only comes in whole sizes,** so it stays crisp. Where space is tight, some small labels (secondary hints, the smallest window size) drop to the smaller size rather than being cut off. *Smooth text* in Settings is there for anyone who prefers it.

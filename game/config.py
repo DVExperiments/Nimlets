@@ -6,6 +6,7 @@ import shutil
 import sys
 
 FROZEN = bool(getattr(sys, "frozen", False))      # running as the packaged .exe
+WEB = sys.platform == "emscripten"                # running in a browser (the web version, via pygbag)
 # Where the game's own files (config/) are: next to the code, or inside the .exe's unpacked bundle.
 ROOT_DIR = getattr(sys, "_MEIPASS", None) if FROZEN else None
 ROOT_DIR = ROOT_DIR or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,6 +24,8 @@ def data_dir():
     override = os.environ.get("NIMLETS_DATA_DIR")
     if override:
         return override
+    if WEB:
+        return "/data"                            # saves go to browser storage; see save.py
     home = os.path.expanduser("~")
     if sys.platform == "win32":
         return os.path.join(os.environ.get("APPDATA") or os.path.join(home, "AppData", "Roaming"), APP_NAME)

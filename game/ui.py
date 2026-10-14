@@ -1208,13 +1208,19 @@ class UI:
         if hint_y < rect.bottom - fs * 3 and rect.h > 520:
             fb = pygame.Rect(0, 0, self.font(fs - 2, True).size("Open folder")[0] + 28, fs + 14)
             fb.topright = (rect.right - 22, y - 4)
-            self.pill_button(screen, fb, "Open folder", fs - 2)
-            self.hit["folder_btn"] = fb
+            if prefs.get("_web"):                   # no folders in a browser: keep the tour button's place
+                fb.w = 0
+                fb.right = rect.right - 12
+                self.hit["folder_btn"] = None
+            else:
+                self.pill_button(screen, fb, "Open folder", fs - 2)
+                self.hit["folder_btn"] = fb
             tb = pygame.Rect(0, 0, self.font(fs - 2, True).size("Welcome tour")[0] + 28, fs + 14)
             tb.topright = (fb.left - 10, fb.y)
             self.pill_button(screen, tb, "Welcome tour", fs - 2)
             self.hit["tour_btn"] = tb
-            self.text(screen, "Saves, backups and exported reports live in your Nimlets folder.",
+            self.text(screen, "Your pet is saved in this browser." if prefs.get("_web") else
+                      "Saves, backups and exported reports live in your Nimlets folder.",
                       (x, hint_y), fs - 4, t.ink_soft)
         self.text(screen, "Keys: O settings, Left/Right theme, D dark mode, Esc close",
                   (rect.centerx, rect.bottom - fs - 10), fs - 4, t.ink_soft, align="center")

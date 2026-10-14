@@ -120,7 +120,7 @@ class Game:
         if self.args.save:
             self.save_path = self.args.save
         else:
-            self.moved_saves = config.migrate_legacy_saves()
+            self.moved_saves = [] if config.WEB else config.migrate_legacy_saves()
             self.save_path = os.path.join(config.SAVE_DIR, "test_save.json") if self.args.test_save \
                 else config.SAVE_PATH
         self.prefs_path = (os.path.join(os.path.dirname(os.path.abspath(self.save_path)), "preferences.json")
@@ -426,23 +426,37 @@ class Game:
         return bool(self.evolving or self.departing or self.minigame)
 
     # ------------------------------------------------------------------ loop
-    def run(self):
+    def frame(self):
+        """One frame: events, update, draw. Returns False when it's time to quit."""
         running = True
-        frames = 0
-        while running:
-            dt = min(self.clock.tick(self.settings.get("fps", 30)) / 1000.0, 0.25)
-            for ev in pygame.event.get():
-                if not self.handle(ev):
-                    running = False
-            self.update(dt)
-            self.draw()
-            frames += 1
-            if self.args.smoke_test and frames >= self.args.smoke_test:
-                if self.args.screenshot:
-                    pygame.image.save(pygame.display.get_surface(), self.args.screenshot)
+        dt = min(self.clock.tick(self.settings.get("fps", 30)) / 1000.0, 0.25)
+        for ev in pygame.event.get():
+            if not self.handle(ev):
                 running = False
+        self.update(dt)
+        self.draw()
+        self.frames = getattr(self, "frames", 0) + 1
+        if self.args.smoke_test and self.frames >= self.args.smoke_test:
+            if self.args.screenshot:
+                pygame.image.save(pygame.display.get_surface(), self.args.screenshot)
+            running = False
+        return running
+
+    def finish(self):
         self.save()
         pygame.quit()
+
+    def run(self):
+        while self.frame():
+            pass
+        self.finish()
+
+    async def run_async(self):
+        """The same loop for the web version: hand control back to the browser after every frame."""
+        import asyncio
+        while self.frame():
+            await asyncio.sleep(0)
+        self.finish()
 
     def held(self):
         """Paused, or holding still while the welcome tour is open (without touching the saved pause)."""
@@ -1000,6 +1014,7 @@ class Game:
             self.mind.on_focus(True)
             self.check_away(away)
         elif ev.type == getattr(pygame, "WINDOWFOCUSLOST", -1):
+            self.save()                 # a browser tab or phone app can be closed without warning
             self.mind.on_focus(False)
         elif ev.type == getattr(pygame, "WINDOWENTER", -1):
             self.mind.on_mouse_window(True)
@@ -1339,6 +1354,9 @@ class Game:
                     self.audio.play("page")
                     return
                 if hit.get("export_btn") and hit["export_btn"].collidepoint(pos):
+                    if config.WEB:
+                        self.say("Reports can't be saved from the browser version yet.")
+                        return
                     folder = os.path.dirname(os.path.abspath(self.save_path))
                     path = self.mind.recip.report(folder)
                     self.say(f"Report saved: {os.path.basename(path)} (in your Nimlets folder: Settings, Open folder)")
@@ -1409,6 +1427,9 @@ class Game:
         mind.on_click_room(lx, ly)
 
     def export_observation(self):
+        if config.WEB:
+            self.say("Logs can't be saved from the browser version yet.")
+            return
         if self.c.stage == "egg":
             return
         folder = os.path.dirname(os.path.abspath(self.save_path))
@@ -1524,6 +1545,9 @@ class Game:
 
     def open_data_folder(self):
         """Show the folder with saves and exported reports in the system's file browser."""
+        if config.WEB:
+            self.say("In the browser version your pet is saved in the browser itself.")
+            return
         folder = os.path.dirname(os.path.abspath(self.save_path))
         os.makedirs(folder, exist_ok=True)
         try:
@@ -1615,6 +1639,9 @@ class Game:
             self.audio.play("page")
             return
         if hit.get("book_export") and hit["book_export"].collidepoint(pos):
+            if config.WEB:
+                self.say("Reports can't be saved from the browser version yet.")
+                return
             folder = os.path.dirname(os.path.abspath(self.save_path))
             path = self.mind.recip.report(folder)
             self.say(f"Report saved: {os.path.basename(path)} (in your Nimlets folder: Settings, Open folder)")
@@ -1996,7 +2023,7 @@ class Game:
                                  self.can_new_generation(), info)
         elif under == "settings":
             have = shells.unlocked(self.records)
-            prefs = dict(self.prefs, _version=VERSION,
+            prefs = dict(self.prefs, _version=VERSION, _web=config.WEB,
                          _shell_label=shells.label(self.shell_choice()),
                          _shell_hint=f"{len(have)} of {len(shells.SHELLS)} shells unlocked. More appear as your family grows.")
             prefs.setdefault("experimental", True)
@@ -2034,3 +2061,8 @@ class Game:
 
 def main(argv=None):
     Game(argv).run()
+
+
+async def main_async(argv=None):
+    """Entry point for the web version (see main.py)."""
+    await Game(argv or []).run_async()

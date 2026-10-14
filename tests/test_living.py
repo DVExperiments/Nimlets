@@ -205,8 +205,16 @@ class PrefsAndResetTests(unittest.TestCase):
             path = os.path.join(d, "p.json")
             self.assertEqual(load_prefs(path)["theme_hue"], "pet")
             save_prefs(path, {"theme_hue": 262, "dark": True})
-            self.assertEqual(load_prefs(path), {"theme_hue": 262, "dark": True, "wander": True,
-                                                "experimental": True, "mirror": False})
+            from game.save import DEFAULT_PREFS
+            self.assertEqual(load_prefs(path), dict(DEFAULT_PREFS, theme_hue=262, dark=True))
+            # every preference survives a save and a fresh load (v2.2: several used to be forgotten)
+            changed = {"theme_hue": 120, "dark": True, "wander": False, "experimental": False, "mirror": True,
+                       "shell": "glitch", "pixel_text": False, "welcomed": True, "hints": True,
+                       "hints_seen": ["mess", "sleep"], "_shell_label": "not saved"}
+            self.assertEqual(set(changed) - {"_shell_label"}, set(DEFAULT_PREFS))   # a new pref must be added
+            save_prefs(path, changed)
+            loaded = load_prefs(path)
+            self.assertEqual(loaded, {k: v for k, v in changed.items() if not k.startswith("_")})
 
     def test_reset_from_the_game(self):
         import pygame

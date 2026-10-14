@@ -4,6 +4,24 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.2.0 "Web Ready"
+
+The first step towards phones: the same game now runs in a web browser.
+
+**The web version**
+- **Built with pygbag:** `tools/build_web.py` packs only `main.py`, `game/` and `config/`, with the egg icon as the page's icon. `--serve` plays it locally.
+- **Published on GitHub Pages:** `.github/workflows/build-web.yml` runs the tests, builds, and publishes whenever the main branch changes, giving a link that works on phones.
+- **An async main loop** hands control back to the browser after every frame. The desktop loop is unchanged.
+- **Saves in the browser:** saves and preferences go to the browser's own storage, still with a backup copy. On a computer they're files exactly as before.
+- **Saving whenever the window loses focus,** since a browser tab or phone app can be closed without warning. This helps on desktop too.
+- **Friendly messages instead of files in the browser:** Settings hides Open folder there, and report and log exports explain they're not available yet.
+
+**Fixes**
+- **Some preferences were forgotten on every restart:** your chosen shell, Pixel/Smooth text, and the welcome tour's flags. Only an older, fixed list of preferences was kept when loading. All of them are kept now, and a test restarts the game to make sure.
+
+**Tests**
+- 6 new tests (199 in total), still passing at any simulated time of day.
+
 ## v2.1.0 "Welcome"
 
 **A welcome for new players**
