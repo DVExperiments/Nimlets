@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 2.0.0 "Build Ready"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 2.1.0 "Welcome"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -29,6 +29,10 @@ Other options: `--reset` (fresh game; the old save is backed up), `--mute`, `--s
 
 **Settings → Open folder** takes you there. The first time v2.0 or later runs, it *copies* any saves from the old `saves` folder inside the game folder (the originals are left where they were). Set `NIMLETS_DATA_DIR` to use a different folder, for example a portable copy on a USB stick.
 
+## Licence
+
+Nimlets is **free to play, all rights reserved**. Anyone can download it from this page and play it for free, but it may not be copied, re-uploaded, modified or sold without permission. See [LICENSE](LICENSE). To ask for permission, open an issue.
+
 ## Building the standalone game (Nimlets.exe)
 
 Players don't need Python: they just run **Nimlets.exe**. There are two ways to build it, and both use the same script, `tools/build_exe.py`, which runs the tests, draws the icon, builds a single-file game with PyInstaller, test-runs the result, and zips it with a short read-me for players.
@@ -39,6 +43,8 @@ Players don't need Python: they just run **Nimlets.exe**. There are two ways to 
 If any test fails, no build is made. Always change the code and rebuild; never edit a build. Windows may show "Windows protected your PC" the first time someone runs the .exe, because it isn't signed with a paid certificate; *More info → Run anyway* starts it.
 
 ## How to play
+
+The first time you play, a short **welcome tour** (five pages) introduces the egg, the hearts, the buttons, how your pet notices you, and how time works. Game time holds still while it's open, so the egg can't hatch mid-tour. For your first days, a few **one-time hints** appear in the message line the first time something important happens: its first call for attention, its first mess, its first bedtime, its first drawing on the wall, and the first time it grows up. Players who already had a save don't see either. **Settings → Welcome tour** shows the tour again any time.
 
 The game looks like a little handheld device. The room is its screen, the eight action **tabs** run down both sides of it, the **hearts** sit in a strip above it, messages appear on the small green screen below it, and along the bottom are the **A / B / C** buttons with Settings and Sound on the left and Speed and Pause on the right.
 
@@ -88,7 +94,7 @@ Interesting things your pet does are written to a **Diary** (Records → Diary, 
 - **Appearance.** Light or Dark (**D**), and **Pixel text** or **Smooth text**. Pixel text is the game's own pixel font; switch to smooth text if you find it easier to read.
 - **Shell.** Click the left or right half to cycle through *Match my pet* and the shells you've unlocked (see *Shells* below). Sound has its own button on the device, or press **M**.
 - **Wandering** (on by default): lets a pet that's used to going outside take long walks around the whole device. See "The Frontier" below.
-- **Open folder** opens your Nimlets folder, with saves, backups and exported reports.
+- **Open folder** opens your Nimlets folder, with saves, backups and exported reports. **Welcome tour** replays the first-time tour.
 - **Reset.**
   - *New egg (keep records)* starts over but keeps your collection, family history and gifts.
   - *Erase everything* wipes the pet and all records.
@@ -404,6 +410,7 @@ game/pixelfont.py     the game's own pixel font, drawn in code
 game/journal.py       the behaviour diary
 game/escape.py        trips across the interface, including long wanders around the device
 game/icon.py          the app icon (an egg on an underwater tile), drawn in code
+game/welcome.py       the first-time welcome tour and the one-time hints
 game/minigames.py     Higher or Lower, Which Way?, Timing Star
 game/sprites.py       procedural pixel-art creature/egg generator
 game/room.py          room, window sky/weather, seasons, mess, lighting, particles
@@ -427,6 +434,7 @@ tools/build_exe.py    builds the standalone game: tests, icon, PyInstaller, smok
 build_exe.bat         one-click build on Windows (installs what it needs, then runs build_exe.py)
 .github/workflows/build-windows.yml   builds the .exe on GitHub for every Release
 tests/test_build_ready.py  the Nimlets data folder, copying old saves, the test save, the icon
+tests/test_welcome.py      the welcome tour, holding time, skipping, replaying, and the one-time hints
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
 dv-project.json       metadata for the DV Experiments dashboard
@@ -476,7 +484,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 185 tests cover:
+The 193 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -538,6 +546,10 @@ The 185 tests cover:
 - v1.9 pixel font and shells: every glyph is well formed, rendered sizes match measured sizes at every scale, unknown characters are stood in for, pixels stay crisp, the generation and rare-egg shells unlock from the records, Match my pet prefers a secret form, then a rare egg, then the family line, falling back to what's unlocked, all 14 shells draw light and dark, every screen (menus, panels, shop, Records, the book, dialogs and mini-games) draws in both text styles at three window sizes, and Settings switches the text style
 
 - v2.0 build-ready: the Nimlets data folder on Windows, macOS and Linux (and the override), old saves copied once without ever overwriting a newer save, the game saving to the data folder with a separate test save, a wander touring the device without leaving the window, and the icon drawing at every size with a valid multi-size .ico
+
+- v2.1 welcome: a new player gets the tour and time holds still without touching their own pause, pages turn with keys, A/B/C and buttons, skipping, existing players never see it unless they ask, every page draws in both text styles at three sizes, each hint shows once, hints never interrupt another message, and what triggers each hint
+
+The whole suite is also run at simulated times of day (night, morning, noon, evening), so no test depends on the real clock.
 
   Also covered: deliberate watching, time awareness, real pause, episode recall and fading, the cursor drawing reaching the representation stage, tool use emerging across seeds, private stashes pausing near the cursor, mirror stages, the caretaker figure learning, the memory frame, older saves upgrading, Observation Mode pages, the "Unusual: off" switch, and log export
 
@@ -605,6 +617,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Wandering around the whole device (replaces desktop roaming) | ✅ |
 | Saves in a per-user Nimlets folder, with a one-time copy of old saves | ✅ |
 | App icon drawn in code, with a multi-size .ico | ✅ |
+| First-time welcome tour and one-time hints for new players | ✅ |
 | Reciprocal intelligence: gestures, two-way imitation, 4 pet-led games, private language (4 levels), experiments on the player, repair, negotiation, boundaries, rituals, drawing together, player model | ✅ |
 | Shared Memories + Observation Lab + report export | ✅ |
 | Versioned releases + CHANGELOG | ✅ |
@@ -613,7 +626,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 185 passing |
+| Automated tests | ✅ 193 passing |
 
 ## Known limitations (honest notes)
 

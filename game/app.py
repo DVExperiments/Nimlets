@@ -25,6 +25,7 @@ from .observer import heading_target
 from . import shop
 from . import shells
 from .book import Book, SECTIONS as BOOK_SECTIONS
+from . import welcome as welcome_mod
 from .reciprocity import PLAYER_INK
 from .version import VERSION
 from .world import MURAL_RECT, World
@@ -148,8 +149,17 @@ class Game:
             for path in (self.save_path, self.save_path + ".bak"):
                 if os.path.exists(path):
                     os.remove(path)
-        if not self.load():
+        loaded = self.load()
+        if not loaded:
             self.new_game()
+        self.welcome_page = 0
+        self.hint_t = 0.0
+        if not self.prefs.get("welcomed"):
+            if loaded or os.environ.get("NIMLETS_SKIP_WELCOME"):
+                self.set_pref("welcomed", True)          # an existing player: no tour, no hints
+            else:
+                self.set_pref("hints", True)             # a brand-new player: tour now, hints later
+                self.open_welcome()
         speeds = self.speeds()
         target = 600 if self.args.fast else self.args.speed
         if target:
@@ -434,6 +444,10 @@ class Game:
         self.save()
         pygame.quit()
 
+    def held(self):
+        """Paused, or holding still while the welcome tour is open (without touching the saved pause)."""
+        return self.paused or self.panel == "welcome"
+
     def update(self, dt):
         c = self.c
         if self.abc_t > 0:
@@ -442,19 +456,27 @@ class Game:
                 self.ui.abc_pressed = None
         if self.sponge and (self.menu or self.panel or self.blocked() or self.trip):
             self.sponge = None
+        self.hint_t -= dt
+        if self.prefs.get("hints") and self.hint_t <= 0:
+            self.hint_t = 1.0
+            if self.msg_t <= 0 and not (self.panel or self.menu or self.blocked() or self.trip):
+                hid = welcome_mod.hint_due(self)
+                if hid:
+                    self.say(welcome_mod.HINTS[hid])
+                    self.set_pref("hints_seen", list(self.prefs.get("hints_seen", [])) + [hid])
         care.tick_real(c, dt)
-        if not self.paused:
+        if not self.held():
             sim = dt * self.settings["base_time_scale"] * self.speed()
             self.step_sim(sim)
             self.mind.update_sim(sim)
-        if not self.paused:                    # paused means everything stops - the pet too
+        if not self.held():                    # paused means everything stops - the pet too
             self.update_mind(dt)
             self.mind.observer.on_rapid(dt, self.speed())
         if self.evolving:
             self.update_evolution(dt)
         elif self.departing:
             self.update_depart(dt)
-        elif (not self.paused and not self.minigame and evolution.is_due(c, self.settings)):
+        elif (not self.held() and not self.minigame and evolution.is_due(c, self.settings)):
             self.start_evolution()
         self.mind.pace = 1.0 if self.speed() <= 1 else min(8.0, self.speed() ** 0.4)
         if self.mind.escape_request and not self.trip and not self.blocked():
@@ -466,7 +488,7 @@ class Game:
             self.end_trip(hurried=True)
         if self.trip:
             self.update_trip(dt)
-        if not self.evolving and not self.departing and not self.paused:
+        if not self.evolving and not self.departing and not self.held():
             self.beh.update(dt, c, self.sp())
         food = self.world.bowl_food
         if food:
@@ -1100,6 +1122,14 @@ class Game:
             elif key == pygame.K_m:
                 self.toggle("sound")
             return
+        if self.panel == "welcome":
+            if key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_RIGHT, pygame.K_KP_ENTER):
+                self.turn_welcome(1)
+            elif key == pygame.K_LEFT:
+                self.turn_welcome(-1)
+            elif key == pygame.K_ESCAPE:
+                self.close_welcome()
+            return
         if self.panel == "book":
             if key in (pygame.K_ESCAPE, pygame.K_RETURN):
                 self.close_book()
@@ -1237,6 +1267,9 @@ class Game:
                     self.set_pref("pixel_text", not self.prefs.get("pixel_text", True))
                     self.audio.play("select")
                     return
+                if hit.get("tour_btn") and hit["tour_btn"].collidepoint(pos):
+                    self.open_welcome()
+                    return
                 if hit.get("folder_btn") and hit["folder_btn"].collidepoint(pos):
                     self.open_data_folder()
                     return
@@ -1275,6 +1308,14 @@ class Game:
                 if hit.get("reset_hard") and hit["reset_hard"].collidepoint(pos):
                     self.ask("reset_hard")
                     return
+            if self.panel == "welcome":
+                for key, d in (("welcome_next", 1), ("welcome_back", -1)):
+                    if hit.get(key) and hit[key].collidepoint(pos):
+                        self.turn_welcome(d)
+                        return
+                if hit.get("welcome_skip") and hit["welcome_skip"].collidepoint(pos):
+                    self.close_welcome()
+                return
             if self.panel == "book":
                 self.click_book(pos)
                 return
@@ -1460,6 +1501,27 @@ class Game:
         if msg:
             self.say(msg)
 
+    # ---------------------------------------------------------------- the welcome tour
+    def open_welcome(self):
+        self.menu = None
+        self.welcome_page = 0
+        self.panel = "welcome"
+
+    def turn_welcome(self, d):
+        page = self.welcome_page + d
+        if page >= len(welcome_mod.PAGES):
+            self.close_welcome()
+            return
+        self.welcome_page = max(0, page)
+        self.audio.play("page")
+
+    def close_welcome(self):
+        self.panel = None
+        self.set_pref("welcomed", True)
+        self.audio.play("happy")
+        if self.c.stage == "egg":
+            self.say("Your egg is warm. It will hatch very soon!")
+
     def open_data_folder(self):
         """Show the folder with saves and exported reports in the system's file browser."""
         folder = os.path.dirname(os.path.abspath(self.save_path))
@@ -1599,6 +1661,9 @@ class Game:
                 self.menu_select()
             else:
                 self.menu = None
+            return
+        if self.panel == "welcome":
+            self.turn_welcome(-1 if name == "c" else 1)
             return
         if self.panel == "book":
             if name == "c":
@@ -1938,6 +2003,10 @@ class Game:
             self.ui.draw_settings(screen, L, prefs, c.genome.get("hue", 200), self.audio.enabled)
         if self.panel == "book":
             self.draw_book(screen, L, info)
+        if self.panel == "welcome":
+            if not hasattr(self, "welcome"):
+                self.welcome = welcome_mod.Welcome(self.ui)
+            self.welcome.draw(screen, L, self.welcome_page, {"renderer": self.renderer, "c": c})
         if self.panel == "shop":
             items = []
             for k in self.shop_items():

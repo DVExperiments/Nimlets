@@ -4,6 +4,34 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.1.0 "Welcome"
+
+**A welcome for new players**
+- **A five-page storybook tour the first time someone plays:**
+  - your egg and the 28 forms it might become;
+  - looking after it (the hearts, the attention light and the tabs);
+  - the A/B/C buttons;
+  - how your Nimlet notices you and has a mind of its own (without spoiling what it does);
+  - how life carries on gently in real time.
+- **Each page has a picture drawn from the game's own pieces.** On small windows the picture shrinks before the text does.
+- **Game time holds still during the tour,** so the egg can't hatch mid-tour, and the player's own pause setting isn't touched.
+- **Turning pages:** Next, Back and Skip, or Enter/Right, Left and Esc, or B and C.
+- **Settings → Welcome tour** replays it.
+- **Existing players never see it automatically.**
+
+**One-time hints**
+- For a new player's first days, a short hint appears the first time something important happens: its first call for attention, its first mess, its first bedtime, its first drawing on the wall, and the first time it grows up.
+- Each appears once, waits until no other message is showing, and is remembered in preferences.
+
+**Licence**
+- **Nimlets is now explicitly "free to play, all rights reserved"** (`LICENSE`). Anyone can download and play it free, but it may not be copied, re-uploaded, modified or sold without permission.
+- **The release zip includes it** as `LICENSE.txt`.
+
+**Tests**
+- 8 new tests (193 in total).
+- The wander test assumed daytime and failed after the pet's bedtime; it's pinned to the afternoon now.
+- The whole suite was checked at five simulated times of day.
+
 ## v2.0.0 "Build Ready"
 
 Getting ready for the standalone Windows .exe.

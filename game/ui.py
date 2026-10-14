@@ -1210,6 +1210,10 @@ class UI:
             fb.topright = (rect.right - 22, y - 4)
             self.pill_button(screen, fb, "Open folder", fs - 2)
             self.hit["folder_btn"] = fb
+            tb = pygame.Rect(0, 0, self.font(fs - 2, True).size("Welcome tour")[0] + 28, fs + 14)
+            tb.topright = (fb.left - 10, fb.y)
+            self.pill_button(screen, tb, "Welcome tour", fs - 2)
+            self.hit["tour_btn"] = tb
             self.text(screen, "Saves, backups and exported reports live in your Nimlets folder.",
                       (x, hint_y), fs - 4, t.ink_soft)
         self.text(screen, "Keys: O settings, Left/Right theme, D dark mode, Esc close",

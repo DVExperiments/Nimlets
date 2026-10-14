@@ -41,6 +41,9 @@ Your pet is saved in your own Nimlets folder, not next to the game:
 just replace Nimlets.exe with the new one.
 
 Keys: 1-8 actions, A / B / C buttons, O settings, M sound, P pause, F9 Observation Mode.
+
+Nimlets is free to play, all rights reserved: please don't re-upload, modify
+or sell it. Share the official GitHub page instead. See LICENSE.txt.
 """
 
 
@@ -108,6 +111,7 @@ def package(exe):
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         z.write(exe, os.path.basename(exe))
         z.writestr("README.txt", PLAYER_README.format(version=f"v{VERSION}"))
+        z.write(os.path.join(ROOT, "LICENSE"), "LICENSE.txt")
     return out
 
 
