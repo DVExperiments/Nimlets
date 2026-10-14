@@ -4,6 +4,17 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.5.2 "Pocket" (fix)
+
+**Back upright, the screen still sat too high, with its top cut off and an empty gap below**
+- **The cause:** v2.5.1 made the canvas the right size, but pygbag still decided where it sat on the page. It centres the canvas in a box, and after a phone turned back upright that box could still be the landscape height. So the tall canvas was centred on a short box: its top hung above the screen and an empty grey gap was left below.
+- **The fix:** the game tells pygbag it manages the canvas itself, using pygbag's own switch for this (`user_canvas_managed`). It then places the canvas directly: pinned to the screen, as big as fits without changing its shape, and centred.
+- **It's re-placed whenever the window changes,** even while the phone is still turning, before the canvas itself is re-sized.
+- **Even if re-sizing is ever switched off after a failure,** the canvas is still placed fully on screen.
+
+**Tests**
+- 3 new tests (238 in total): the fit itself, a phone turned back upright being fully on screen straight away, and placement when re-sizing is off. The rotation test now checks where the canvas actually sits at each step.
+
 ## v2.5.1 "Pocket" (fix)
 
 **Turning a phone back upright cut off the top third of the screen**

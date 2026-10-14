@@ -156,11 +156,22 @@ class FakeDocument:
         self.documentElement, self.body = FakeElement(), FakeElement()
 
 
+class FakeConfig:
+    user_canvas_managed = 0
+
+
+class FakePython:
+    def __init__(self, config):
+        self.config = config
+
+
 class FakeWindow:
     def __init__(self, w, h, dpr):
         self.innerWidth, self.innerHeight, self.devicePixelRatio = w, h, dpr
         self.canvas = FakeCanvas()
         self.document = FakeDocument()
+        self.config = FakeConfig()                  # pygbag's config, also reachable as window.python.config
+        self.python = FakePython(self.config)
         self.resized = 0
         self.scrolled = 0
 
@@ -182,6 +193,52 @@ class WebFitTests(unittest.TestCase):
         import platform
         self.platform = platform
 
+    def assert_placed(self, win, left, top, w, h):
+        st = win.canvas.style
+        self.assertEqual(st.position, "fixed")
+        for value, want in ((st.left, left), (st.top, top), (st.width, w), (st.height, h)):
+            self.assertAlmostEqual(float(value[:-2]), want, delta=0.6)
+
+    def test_fit_rect(self):
+        self.assertEqual(webscreen.fit_rect(390, 844, 585, 1266), (0.0, 0.0, 390.0, 844.0))
+        left, top, w, h = webscreen.fit_rect(390, 844, 960, 760)          # wrong shape: centred, not cut
+        self.assertEqual((left, w), (0.0, 390.0))
+        self.assertAlmostEqual(h, 308.75)
+        self.assertAlmostEqual(top, (844 - 308.75) / 2)
+
+    def test_placed_on_screen_even_while_the_phone_is_turning(self):
+        """The screenshot bug: back upright, the canvas sat centred on the old landscape
+        height, its top off the screen. Now it's re-pinned to the new window straight away."""
+        from game.app import Game
+        with tempfile.TemporaryDirectory() as d:
+            pygame.display.set_mode((1266, 585))
+            win = FakeWindow(844, 390, 3)
+            with mock.patch.object(self.platform, "window", win, create=True), \
+                    mock.patch.object(config, "WEB", True), mock.patch("game.app.save_prefs"), \
+                    mock.patch("game.app.weblog"):
+                g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
+                fit_twice(g)
+                self.assert_placed(win, 0, 0, 844, 390)
+                win.innerWidth, win.innerHeight = 390, 844
+                g.web_fit()                     # not resized yet (waiting for it to settle)...
+                self.assertEqual(g.screen.get_size(), (1266, 585))
+                left, top, w, h = webscreen.fit_rect(390, 844, 1266, 585)
+                self.assert_placed(win, left, top, w, h)   # ...but already fully on screen
+                self.assertGreaterEqual(top, 0)
+
+    def test_placed_even_when_resizing_is_off(self):
+        from game.app import Game
+        with tempfile.TemporaryDirectory() as d:
+            pygame.display.set_mode((960, 760))
+            win = FakeWindow(390, 844, 3)
+            with mock.patch.object(self.platform, "window", win, create=True), \
+                    mock.patch.object(config, "WEB", True), mock.patch("game.app.save_prefs"), \
+                    mock.patch("game.app.weblog"):
+                g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
+                g.web_fit_off = True
+                g.web_fit()
+                self.assert_placed(win, *webscreen.fit_rect(390, 844, 960, 760))
+
     def test_wanted_size_reads_the_browser(self):
         with mock.patch.object(self.platform, "window", FakeWindow(390, 844, 3), create=True):
             self.assertEqual(webscreen.wanted_size(), (585, 1266))
@@ -200,7 +257,8 @@ class WebFitTests(unittest.TestCase):
                 fit_twice(g)
                 self.assertEqual(g.screen.get_size(), (585, 1266))
                 self.assertEqual(win.canvas.style.imageRendering, "pixelated")
-                self.assertGreaterEqual(win.resized, 1)
+                self.assertEqual(win.config.user_canvas_managed, 1)     # pygbag leaves the canvas to us
+                self.assert_placed(win, 0, 0, 390, 844)
                 g.draw()
                 self.assertEqual(g.L.kind, "portrait")
                 win.innerWidth, win.innerHeight = 844, 390               # turned on its side
@@ -208,11 +266,13 @@ class WebFitTests(unittest.TestCase):
                 g.draw()
                 self.assertEqual(g.screen.get_size(), (1266, 585))
                 self.assertEqual(g.L.kind, "wide")
+                self.assert_placed(win, 0, 0, 844, 390)
                 win.innerWidth, win.innerHeight = 390, 844               # and back upright
                 fit_twice(g)
                 g.draw()
                 self.assertEqual(g.screen.get_size(), (585, 1266))
                 self.assertEqual(g.L.kind, "portrait")
+                self.assert_placed(win, 0, 0, 390, 844)                  # the v2.5.1 bug: the top cut off
                 self.assertGreater(win.scrolled, 0)                       # the page is held still
                 self.assertEqual(win.document.body.style.overflow, "hidden")
 
@@ -265,11 +325,10 @@ class WebFitTests(unittest.TestCase):
                 fit_twice(g)
                 self.assertEqual(g.screen.get_size(), (585, 1266))
                 win.canvas.width, win.canvas.height = 585, 844     # shrunk by someone else
-                before = win.resized
                 with mock.patch("pygame.display.set_mode", wraps=pygame.display.set_mode) as sm:
                     g.web_fit()
                     self.assertEqual(sm.call_count, 1)
-                self.assertGreater(win.resized, before)
+                self.assert_placed(win, 0, 0, 390, 844)
 
     def test_a_failed_resize_keeps_the_old_canvas(self):
         from game.app import Game

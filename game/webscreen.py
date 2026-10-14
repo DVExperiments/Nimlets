@@ -22,6 +22,14 @@ window is never RESIZABLE (``FLAGS``): the game alone owns the drawing size, pyg
 alone owns the on-screen size, and the game checks the real canvas, not just its
 own idea of it.
 
+Where it sits on the page (v2.5.2). pygbag also *places* the canvas: it centres it in
+a box on the page. After a phone turned back upright that box could still have the
+landscape height, so the tall canvas was centred on a short box, with its top above
+the screen and an empty gap below. So the game now tells pygbag it manages the canvas
+itself (pygbag's ``user_canvas_managed`` switch) and places it directly: pinned to the
+screen (``position: fixed``), as big as fits without changing its shape, and centred,
+worked out from the window's size every time it changes.
+
 Everything that touches the browser is wrapped: if anything goes wrong, the game
 keeps its current canvas (as before) instead of risking a blank page.
 """
@@ -104,16 +112,50 @@ def settle():
         pass
 
 
-def after_resize():
-    """Ask pygbag to re-fit the canvas to the window, crisply."""
+def fit_rect(win_w, win_h, canvas_w, canvas_h):
+    """(left, top, width, height) in CSS pixels: the canvas as big as fits, same shape, centred."""
+    ar = canvas_w / max(1, canvas_h)
+    w = min(win_w, win_h * ar)
+    h = w / ar
+    return (win_w - w) / 2, (win_h - h) / 2, w, h
+
+
+def take_over():
+    """Tell pygbag the game places and sizes the canvas itself, so it stops doing it."""
     win = _window()
     if win is None:
         return
+    for owner in ("python", None):
+        try:
+            cfg = getattr(win, owner).config if owner else win.config
+            cfg.user_canvas_managed = 1
+        except Exception:
+            pass
+
+
+def place(canvas_size):
+    """Pin the canvas to the screen, centred and as big as fits. Returns what it applied
+    (window size, canvas size), so callers can skip it when nothing has changed."""
+    win = _window()
+    bw = browser_window()
+    if win is None or bw is None or not canvas_size:
+        return None
+    win_w, win_h, _ = bw
+    left, top, w, h = fit_rect(win_w, win_h, *canvas_size)
     try:
-        win.canvas.style.imageRendering = "pixelated"
+        st = win.canvas.style
+        st.position = "fixed"
+        st.margin = "0px"
+        st.right = st.bottom = "auto"
+        st.left, st.top = f"{left:.2f}px", f"{top:.2f}px"
+        st.width, st.height = f"{w:.2f}px", f"{h:.2f}px"
+        st.imageRendering = "pixelated"
     except Exception:
-        pass
-    try:
-        win.window_resize()
-    except Exception:
-        pass
+        return None
+    return (win_w, win_h, tuple(canvas_size))
+
+
+def after_resize(canvas_size=None):
+    """After the canvas changes: take it over from pygbag and place it."""
+    take_over()
+    return place(canvas_size)

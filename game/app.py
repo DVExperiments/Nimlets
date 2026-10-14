@@ -486,13 +486,19 @@ class Game:
         checked as well as the game's own surface (SDL could change one without the
         other); and the page is held still so it can't scroll the canvas off the top.
 
-        If replacing the canvas ever fails, stop trying and keep the current one: pygbag
-        still stretches it to fit, which is blurrier but always works."""
-        if not config.WEB or getattr(self, "web_fit_off", False):
+        v2.5.2: the game also places the canvas on the page itself (see webscreen.py), so
+        every check re-pins it whenever the window has changed, even mid-turn.
+
+        If replacing the canvas ever fails, stop trying and keep the current one: it is
+        still placed and stretched to fit, which is blurrier but always works."""
+        if not config.WEB or self.screen is None:
             return
         from . import webscreen
+        self.web_place(self.screen.get_size())       # always where it should be on the page
+        if getattr(self, "web_fit_off", False):
+            return
         want = webscreen.wanted_size()
-        if want is None or self.screen is None:
+        if want is None:
             return
         if want != getattr(self, "web_want", None):
             self.web_want = want                    # wait and see: it may still be turning
@@ -510,13 +516,21 @@ class Game:
             if screen is None or screen.get_size() != tuple(want):
                 raise RuntimeError(f"asked for {want}, got {screen and screen.get_size()}")
             self.screen = screen
-            webscreen.after_resize()
+            self.web_placed = webscreen.after_resize(want)
             webscreen.settle()
             weblog(f"[nimlets] canvas {want[0]}x{want[1]}")
         except Exception as exc:
             self.web_fit_off = True
             self.screen = pygame.display.get_surface() or self.screen
             weblog(f"[nimlets] keeping the canvas at {have[0]}x{have[1]} ({exc})", error=True)
+
+    def web_place(self, size):
+        """Re-pin the canvas when the window or canvas has changed since it was last placed."""
+        from . import webscreen
+        bw = webscreen.browser_window()
+        key = bw and (bw[0], bw[1], tuple(size))
+        if key and key != getattr(self, "web_placed", None):
+            self.web_placed = webscreen.after_resize(size)
 
     def held(self):
         """Paused, or holding still while the welcome tour is open (without touching the saved pause)."""
@@ -2210,7 +2224,7 @@ async def main_async(argv=None, error_frames=None):
             from . import webscreen                 # v2.5: the window's own shape and real pixels
             size = webscreen.wanted_size() or (960, 760)
             pygame.display.set_mode(size, webscreen.FLAGS)      # not RESIZABLE: see webscreen.py
-            webscreen.after_resize()
+            webscreen.after_resize(size)
             webscreen.settle()
             weblog(f"[nimlets] canvas {size[0]}x{size[1]}")
         _web_screen(["Loading Nimlets...", "", "Hatching the code. This can take a little while the first time."])

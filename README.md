@@ -505,7 +505,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 235 tests cover:
+The 238 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -572,7 +572,7 @@ The 235 tests cover:
 
 - v2.2 web-ready: saves and preferences going to browser storage instead of files (with the backup fallback), the game in web mode (no folder buttons, friendly messages for exports, reopening the page restores the pet), the async loop, saving when the window loses focus, the web build packing only the game, and every preference surviving a restart
 - v2.4 touch: a finger exists only while touching (plus a short afterglow), no phantom cursor or false trust after a tap, tabs acting on release and cancelling when you slide off, mouse clicks still immediate, a finger drag ending its gesture on lift, and no heading read from a finger
-- v2.5 phone layouts: upright phones get the portrait layout and phones on their side the wide one, with everything on the device and nothing overlapping at many phone sizes; desktop windows keep the classic device; the Screen setting (including Portrait on a wide window); escape trips staying on the device; long messages wrapping onto two lines instead of shrinking; the browser canvas matching the phone's real pixels within a pixel budget; the game following the phone round and back (never as a resizable window, ignoring sizes reported mid-turn, and putting right a canvas changed by something else); a failed resize keeping the old canvas; and every screen drawing at phone sizes
+- v2.5 phone layouts: upright phones get the portrait layout and phones on their side the wide one, with everything on the device and nothing overlapping at many phone sizes; desktop windows keep the classic device; the Screen setting (including Portrait on a wide window); escape trips staying on the device; long messages wrapping onto two lines instead of shrinking; the browser canvas matching the phone's real pixels within a pixel budget; the game following the phone round and back (never as a resizable window, ignoring sizes reported mid-turn, and putting right a canvas changed by something else, and the canvas pinned fully on screen at every step, v2.5.2); a failed resize keeping the old canvas; and every screen drawing at phone sizes
 
 The whole suite is also run at simulated times of day (night, morning, noon, evening), so no test depends on the real clock.
 
@@ -652,7 +652,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 235 passing |
+| Automated tests | ✅ 238 passing |
 
 ## Known limitations (honest notes)
 
