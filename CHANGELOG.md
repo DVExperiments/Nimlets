@@ -4,6 +4,35 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.6.0 "Front Door"
+
+The web version gets a home page, and can be kept on a phone like an app, without an app store.
+
+**A home page**
+- **The site's address now opens a small home page** instead of going straight into the game: the name in the game's own pixel font, one Nimlet growing from egg to adult on the room's wooden floor, and a big **Play now** button.
+- **It loads straight away.** The game's download only starts when you press Play.
+- **A returning player's button names their pet,** for example "Visit Pichan", or "Check on your egg".
+- **The collection, as Records shows it:** all 28 forms, with the four from the hero filled in, the rest as silhouettes, and the secrets as question marks. No secret is named or drawn.
+- **A short "what it's like"**, and links to the source, the changelog and the Windows version.
+- **All its pictures are drawn at build time by the game's own code,** like everything else: the sprites, the icons and the pixel-font name. The page loads nothing from other sites, works in light and dark, fits phones, and keeps its one bit of motion (the Nimlets hop once, and again when tapped) off for anyone who prefers reduced motion.
+
+**The game moved to `/play/`**
+- **Saves belong to the whole site, not one page,** so every pet is still there.
+- Old links to the site still work, one tap further.
+
+**Keep it like an app**
+- **A web app manifest and icons:** Nimlets can be added to a phone's home screen, or installed from Chrome and Edge on a computer. It then opens full screen with its own icon, straight into the game.
+- **An Install Nimlets button** appears on the home page in browsers that can install it directly.
+- **Short instructions for iPhone and iPad, Android and computers.** On iPhone, the page explains to add it before hatching the egg, because the Home Screen app keeps its own storage, separate from Safari.
+- **The game asks the browser to keep its storage,** on the first tap or key press (never on page load), so a pet isn't cleared to save space.
+
+**Building**
+- `tools/build_web.py` now puts the home page at the top and the game in `play/`. A new `--site-only` option builds just the home page, with a stand-in for the game, and needs no internet; `--serve` serves the whole site locally.
+- The home page lives in the new `site/` folder.
+
+**Tests**
+- 11 new tests (249 in total), in the new `tests/test_site.py`.
+
 ## v2.5.2 "Pocket" (fix)
 
 **Back upright, the screen still sat too high, with its top cut off and an empty gap below**

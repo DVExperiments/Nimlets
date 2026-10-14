@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nimlets: a tiny pet that grows up and notices you</title>
+<meta name="description" content="A tiny pixel pet that hatches from an egg, grows up in your care, and slowly starts to notice you. Free to play in your browser, on a phone or a computer.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-180.png">
+<meta name="theme-color" content="#F7DCCD" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#231C29" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nimlets">
+<meta property="og:title" content="Nimlets">
+<meta property="og:description" content="A tiny pixel pet that hatches, grows up in your care, and slowly starts to notice you.">
+<!-- This page is built by tools/build_web.py, which fills in the names in double braces and draws img/. -->
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #F7DCCD;
+    --card: #FFF6EF;
+    --ink: #2F2535;
+    --soft: #6A5869;
+    --line: #EAC6B4;
+    --floor: #C9976A;
+    --heart: #D93A5A;
+    --shade: #EDA9A2;
+    --body: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #231C29; --card: #33293B; --ink: #F6E8DF; --soft: #BCA8B8;
+      --line: #43364C; --floor: #7A5A44; --heart: #FF6F8A; --shade: #6B3550;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #231C29; --card: #33293B; --ink: #F6E8DF; --soft: #BCA8B8;
+    --line: #43364C; --floor: #7A5A44; --heart: #FF6F8A; --shade: #6B3550;
+  }
+  :root {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 1.0625rem/1.55 var(--body);
+    -webkit-text-size-adjust: 100%;
+  }
+  main, footer {
+    max-width: 38rem;
+    margin: 0 auto;
+    padding: 0 max(1.25rem, env(safe-area-inset-left, 0px)) 0 max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+  img { max-width: 100%; }
+  .pixel { image-rendering: pixelated; image-rendering: crisp-edges; }
+  a { color: inherit; text-underline-offset: 0.18em; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--heart); outline-offset: 3px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* The name, in the game's own pixel font */
+  .hero { padding-top: clamp(2rem, 7vw, 4rem); }
+  h1 { margin: 0; line-height: 0; }
+  .wordmark-art { width: min(100%, 23rem); height: auto; display: block; overflow: visible; }
+  .wordmark-art .face { fill: var(--ink); }
+  .wordmark-art .shade { fill: var(--shade); }
+  .lede { font-size: 1.25rem; line-height: 1.45; margin: 1.25rem 0 0; max-width: 30rem; }
+
+  /* One Nimlet growing up, standing on the room's wooden floor */
+  .growth {
+    list-style: none; margin: 2.25rem 0 0; padding: 0;
+    display: flex; align-items: flex-end;
+  }
+  .growth li { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .growth img {
+    width: 96px; height: 96px; cursor: pointer;
+    transform-origin: 50% 100%;
+    animation: hop 0.55s cubic-bezier(.3,.7,.4,1) both;
+  }
+  .growth li:nth-child(1) img { animation-name: wobble; animation-delay: .35s; }
+  .growth li:nth-child(2) img { animation-delay: .75s; }
+  .growth li:nth-child(3) img { animation-delay: .95s; }
+  .growth li:nth-child(4) img { animation-delay: 1.15s; }
+  .growth li:nth-child(5) img { animation-delay: 1.35s; }
+  .growth img.again { animation: hop 0.55s cubic-bezier(.3,.7,.4,1); }
+  .growth li:nth-child(1) img.again { animation-name: wobble; }
+  .growth span {
+    align-self: stretch; text-align: center;
+    border-top: 6px solid var(--floor);
+    padding-top: 0.4rem;
+    font-size: 0.875rem; color: var(--soft);
+  }
+  @keyframes hop {
+    0%, 100% { transform: translateY(0) scale(1, 1); }
+    18% { transform: translateY(0) scale(1.12, 0.88); }
+    50% { transform: translateY(-16px) scale(0.94, 1.06); }
+    82% { transform: translateY(0) scale(1.08, 0.92); }
+  }
+  @keyframes wobble {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-8deg); }
+    55% { transform: rotate(7deg); }
+    80% { transform: rotate(-3deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .growth img, .growth img.again { animation: none; }
+  }
+
+  /* Play: shaped like the game's own buttons, which press in */
+  .actions { margin-top: 2.25rem; }
+  .play, .install {
+    display: inline-block;
+    font: 700 1.375rem/1 var(--body);
+    color: var(--ink); background: var(--card);
+    text-decoration: none;
+    border: 3px solid var(--ink); border-radius: 16px;
+    padding: 1.05rem 2.4rem;
+    box-shadow: 0 6px 0 var(--ink);
+    transform: translateY(0);
+    transition: transform .06s, box-shadow .06s;
+    cursor: pointer;
+  }
+  .play:hover { background: var(--bg); }
+  .play:active, .install:active { transform: translateY(6px); box-shadow: 0 0 0 var(--ink); }
+  .note { margin: 1.1rem 0 0; color: var(--soft); font-size: 0.9375rem; }
+
+  section { margin-top: 3.75rem; }
+  h2 { font-size: 1.375rem; line-height: 1.25; margin: 0 0 0.6rem; }
+  section p { margin: 0 0 0.9rem; max-width: 34rem; }
+  .small { font-size: 0.9375rem; color: var(--soft); }
+
+  .install { font-size: 1.0625rem; padding: 0.7rem 1.4rem; box-shadow: 0 4px 0 var(--ink); margin: 0.4rem 0 1.2rem; }
+  .install:active { transform: translateY(4px); }
+  .howto { margin: 0.4rem 0 1rem; }
+  .howto dt { font-weight: 700; margin-top: 0.9rem; }
+  .howto dd { margin: 0.15rem 0 0; max-width: 34rem; }
+
+  /* The collection, as the Records screen shows it: found, still to find, secret */
+  .dex {
+    list-style: none; padding: 0; margin: 1.2rem 0 0;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem;
+  }
+  .dex li {
+    aspect-ratio: 1; display: grid; place-items: center;
+    background: var(--card); border-radius: 12px;
+    border: 2px solid transparent;
+  }
+  .dex li.found { border-color: var(--ink); }
+  .dex li.unknown img, .dex li.secret img { opacity: 0.55; }
+  .dex img { width: 64px; height: 64px; }
+
+  footer { margin-top: 4rem; padding-top: 1.5rem; padding-bottom: 2.5rem; border-top: 2px solid var(--line); }
+  footer p { margin: 0 0 0.35rem; font-size: 0.9375rem; color: var(--soft); }
+
+  @media (max-width: 34rem) {
+    .growth img { width: 64px; height: 64px; }
+    .growth span { font-size: 0.8125rem; }
+    .dex { grid-template-columns: repeat(4, 1fr); }
+    .play { display: block; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <h1>{{WORDMARK}}<span class="sr">Nimlets</span></h1>
+    <p class="lede">A tiny pet that hatches from an egg, grows up in your care, and slowly starts to notice you.</p>
+    <ol class="growth" aria-label="One Nimlet growing up">
+      <li><img class="pixel" src="img/grow-egg.png" alt="" width="32" height="32"><span>Egg</span></li>
+      <li><img class="pixel" src="img/grow-pipling.png" alt="" width="32" height="32"><span>Baby</span></li>
+      <li><img class="pixel" src="img/grow-bobbit.png" alt="" width="32" height="32"><span>Child</span></li>
+      <li><img class="pixel" src="img/grow-sprouty.png" alt="" width="32" height="32"><span>Teen</span></li>
+      <li><img class="pixel" src="img/grow-luminelle.png" alt="" width="32" height="32"><span>Adult</span></li>
+    </ol>
+    <div class="actions">
+      <a class="play" id="play" href="play/">Play now</a>
+      <p class="note" id="play-note">Free, in your browser. No account and nothing to download.</p>
+    </div>
+  </header>
+
+  <section id="keep" aria-labelledby="keep-title">
+    <h2 id="keep-title">Keep it like an app</h2>
+    <p>Your Nimlet lives in this browser, on this device. Add it to your home screen and it opens full screen with its own icon.</p>
+    <button class="install" id="install" type="button" hidden>Install Nimlets</button>
+    <dl class="howto">
+      <dt>iPhone and iPad</dt>
+      <dd>In Safari, tap Share, then Add to Home Screen. Do this before you hatch your egg, then always play from the icon: a pet started in Safari stays in Safari. Safari may also clear a website's saved data after about a week away; the home-screen app keeps it.</dd>
+      <dt>Android</dt>
+      <dd>In Chrome, open the menu and choose Add to Home screen or Install app. A pet you've already started comes with you.</dd>
+      <dt>Computer</dt>
+      <dd>Chrome and Edge offer to install it from the address bar. Otherwise, bookmark this page.</dd>
+    </dl>
+    <p class="small">Clearing this site's data in your browser settings clears your pet too.</p>
+  </section>
+
+  <section id="forms" aria-labelledby="forms-title">
+    <h2 id="forms-title">{{FORMS}} forms to find</h2>
+    <p>How you raise it decides what it becomes. Your first Nimlet fills in {{FOUND}} of these, and {{SECRETS}} are secret.</p>
+    <ul class="dex pixel" aria-label="The collection">
+{{COLLECTION}}
+    </ul>
+  </section>
+
+  <section id="about" aria-labelledby="about-title">
+    <h2 id="about-title">What it's like</h2>
+    <p>Visits are short: feed it, play a quick game, clean up, turn the lights off at bedtime. It never dies of neglect. When it's grown, it leaves an egg behind and the next generation begins in the same room, with the old drawings still on the wall.</p>
+    <p>Underneath, it's a small artificial-life experiment. It learns your habits, invents little signals to ask for things, and sometimes guesses what you'll do next. It only notices what happens inside the game: no camera, no microphone, no account.</p>
+  </section>
+</main>
+<footer>
+  <p>Nimlets v{{VERSION}} "{{CODENAME}}". Free to play; all rights reserved.</p>
+  <p><a href="https://github.com/DVExperiments/Nimlets">Source code and changelog on GitHub</a></p>
+  <p><a href="https://github.com/DVExperiments/Nimlets/releases">Windows version (Nimlets.exe)</a></p>
+</footer>
+<script>
+(function () {
+  // A returning player: name the pet on the button (the game saves under this key, see game/save.py).
+  var play = document.getElementById("play"), note = document.getElementById("play-note");
+  try {
+    var raw = window.localStorage.getItem("nimlets:savegame.json");
+    var c = raw ? (JSON.parse(raw) || {}).creature : null;
+    if (c && c.stage === "egg") {
+      play.textContent = "Check on your egg";
+      note.textContent = "It's waiting where you left it.";
+    } else if (c && typeof c.name === "string" && c.name) {
+      play.textContent = "Visit " + c.name.slice(0, 24);
+      note.textContent = c.name.slice(0, 24) + " is waiting where you left it.";
+    }
+  } catch (e) {}
+
+  // Already playing from the home screen: no need to explain how to get there.
+  var standalone = window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  if (standalone) document.getElementById("keep").hidden = true;
+
+  // Browsers that can install it straight away (Chrome, Edge) get a button.
+  var install = document.getElementById("install"), offer = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    offer = e;
+    install.hidden = false;
+  });
+  install.addEventListener("click", function () {
+    if (!offer) return;
+    offer.prompt();
+    offer = null;
+    install.hidden = true;
+  });
+  window.addEventListener("appinstalled", function () { install.hidden = true; });
+
+  // Tap a Nimlet and it hops again.
+  Array.prototype.forEach.call(document.querySelectorAll(".growth img"), function (img) {
+    img.addEventListener("click", function () {
+      img.classList.remove("again");
+      void img.offsetWidth;
+      img.classList.add("again");
+    });
+  });
+})();
+</script>
+</body>
+</html>

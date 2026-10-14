@@ -3,7 +3,7 @@
   "tagline": "Little lives. Big questions.",
   "description": "Nimlets is a retro-inspired virtual pet game and artificial-life experiment. Hatch and care for a Nimlet, watch it develop its own personality, habits and memories, and discover how a small simulated creature can begin to feel surprisingly alive.",
   "category": "Games",
-  "platform": "Python / pygame-ce / Windows desktop",
+  "platform": "Browser (desktop and phone) / Windows desktop / Python + pygame-ce",
   "cover": "assets/nimlets-cover.png",
   "imageAlt": "Nimlets pixel-art-inspired virtual pet displayed inside a retro digital companion, representing an artificial-life experiment",
   "overview": [
@@ -24,7 +24,7 @@
     "Customisable interface colour themes, pet reset and main-screen time acceleration",
     "Automatic local saves, JSON persistence and capped offline time progression",
     "An expanding artificial-life direction exploring communication, player prediction, experimentation and creature-led interactions",
-    "Lightweight offline Windows desktop application built in Python with pygame-ce"
+    "Plays in any modern browser, on a phone or a computer, and can be added to a home screen like an app; also a lightweight offline Windows build"
   ],
   "tags": [
     "Virtual Pet",
@@ -42,10 +42,12 @@
     "Experimental Game Design",
     "Python",
     "pygame-ce",
+    "Browser",
+    "Mobile",
     "Windows",
     "Desktop"
   ],
   "featured": false,
   "visible": true,
-  "notice": "Nimlets is a Python/pygame-ce Windows desktop project, not a browser-playable game. Python and the required dependencies are needed to run the source version. Features involving deeper reciprocal learning, self-directed experiments and awareness of simulation boundaries are ongoing development goals and may not be available in every build. Creature behaviour is simulated; it is not evidence of consciousness."
+  "notice": "Nimlets plays in the browser at https://dvexperiments.github.io/Nimlets/ on computers and phones, and can be added to a home screen. A Windows build (Nimlets.exe) is on the GitHub Releases page. Features involving deeper reciprocal learning, self-directed experiments and awareness of simulation boundaries are ongoing development goals and may not be available in every build. Creature behaviour is simulated; it is not evidence of consciousness."
 }

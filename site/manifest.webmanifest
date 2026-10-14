@@ -1,0 +1,15 @@
+{
+  "name": "Nimlets",
+  "short_name": "Nimlets",
+  "description": "A tiny pixel pet that hatches, grows up in your care, and slowly starts to notice you.",
+  "start_url": "./play/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7DCCD",
+  "theme_color": "#F7DCCD",
+  "icons": [
+    {"src": "img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "img/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

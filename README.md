@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 2.3.0 "Bigger Screen"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 2.6.0 "Front Door"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -44,10 +44,16 @@ If any test fails, no build is made. Always change the code and rebuild; never e
 
 ## Playing in a browser (and on phones)
 
-The same game also runs in a web browser, built with [pygbag](https://pypi.org/project/pygbag/). GitHub builds it and publishes it on **GitHub Pages** every time the main branch changes, so there's a link anyone can open on a computer, tablet or phone.
+**Play it at https://dvexperiments.github.io/Nimlets/**, on a computer, tablet or phone. No app store and no download.
 
+The same game also runs in a web browser, built with [pygbag](https://pypi.org/project/pygbag/). GitHub builds it and publishes it on **GitHub Pages** every time the main branch changes.
+
+- **The home page (v2.6).** The address opens a small home page: the name, one Nimlet growing up from egg to adult, a **Play now** button, how to keep it like an app, and the collection of forms to find. It loads straight away; the game's own download only starts when you press Play. A returning player's button names their pet ("Visit Pichan"). The page lives in `site/` and its pictures are drawn at build time by the game's own sprite code.
+- **The game is at `/play/`.** Old links to the site still work, one tap further. Saves belong to the whole site, so moving the game there kept every pet.
+- **Keep it like an app (v2.6).** Nimlets can be added to a home screen (or installed from Chrome and Edge on a computer) and then opens full screen with its own icon, straight into the game. Chrome and Edge get an **Install Nimlets** button on the home page. The first time you tap or press a key in the game, it asks the browser to keep its storage, so the pet isn't cleared to save space.
+- **On iPhone and iPad, add it to the Home Screen before hatching your egg** and always play from the icon. The Home Screen app has its own storage, separate from Safari, so a pet started in Safari stays in Safari. Safari may also clear a website's saved data after about a week away; the Home Screen app keeps it. The home page explains this.
 - **One-time setup:** in the repo's *Settings → Pages → Build and deployment*, set *Source* to **GitHub Actions**. The workflow is `.github/workflows/build-web.yml`; the address appears on the run's summary in the *Actions* tab.
-- **On your own computer:** `python tools/build_web.py --serve` builds it and serves it at http://localhost:8000. pygbag downloads its browser runtime while building, so this needs an internet connection.
+- **On your own computer:** `python tools/build_web.py --serve` builds everything and serves it at http://localhost:8000. pygbag downloads its browser runtime while building, so this needs an internet connection. `python tools/build_web.py --site-only --serve` builds just the home page, with a stand-in for the game, and works offline.
 - **In the browser your pet is saved in the browser itself.** Clearing the site's data clears your pet, and a browser save is separate from the one on your computer. Reports and logs can't be exported from the browser version yet.
 - **It works on phones and computers** (tested in Chrome on a PC and on a phone).
 - **Touch (v2.4):** with a finger, the pet only sees you while you're touching. Tap the pet, the room and its things as you would click them. Tabs press in and act when you lift (slide off to cancel). Drag on the lower wall to draw, drag the bed to move it, and drag anywhere else in the room to make a gesture; lifting your finger ends it.
@@ -447,7 +453,9 @@ tests/test_font_shells.py  pixel font, the 14 shells and their unlocks, every sc
 tools/export_sprites.py  renders assets/sprite_sheet.png (preview of all forms)
 tools/make_icon.py    writes assets/icon.png and the multi-size assets/icon.ico for the .exe
 tools/build_exe.py    builds the standalone game: tests, icon, PyInstaller, smoke test, release zip
-tools/build_web.py    builds the web version with pygbag (packs only main.py, game/ and config/)
+tools/build_web.py    builds the web version: the home page from site/, and the game with pygbag in play/
+site/index.html       the web home page (filled in and illustrated by build_web.py)
+site/manifest.webmanifest  lets the web version be added to a home screen or installed as an app
 build_exe.bat         one-click build on Windows (installs what it needs, then runs build_exe.py)
 .github/workflows/build-windows.yml   builds the .exe on GitHub for every Release
 .github/workflows/build-web.yml       builds the web version and publishes it on GitHub Pages
@@ -456,6 +464,7 @@ tests/test_welcome.py      the welcome tour, holding time, skipping, replaying, 
 tests/test_touch.py        the pointer: a finger only there while touching, tabs on release, finger gestures
 tests/test_phone.py        portrait and wide layouts, the Screen setting, canvas sizing, following the phone round
 tests/test_web.py          the async loop, saving to browser storage, web mode, and what the web build packs
+tests/test_site.py         the web home page, the game in play/, the app manifest, icons and the collection
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
 dv-project.json       metadata for the DV Experiments dashboard
@@ -505,7 +514,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 238 tests cover:
+The 249 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -573,6 +582,7 @@ The 238 tests cover:
 - v2.2 web-ready: saves and preferences going to browser storage instead of files (with the backup fallback), the game in web mode (no folder buttons, friendly messages for exports, reopening the page restores the pet), the async loop, saving when the window loses focus, the web build packing only the game, and every preference surviving a restart
 - v2.4 touch: a finger exists only while touching (plus a short afterglow), no phantom cursor or false trust after a tap, tabs acting on release and cancelling when you slide off, mouse clicks still immediate, a finger drag ending its gesture on lift, and no heading read from a finger
 - v2.5 phone layouts: upright phones get the portrait layout and phones on their side the wide one, with everything on the device and nothing overlapping at many phone sizes; desktop windows keep the classic device; the Screen setting (including Portrait on a wide window); escape trips staying on the device; long messages wrapping onto two lines instead of shrinking; the browser canvas matching the phone's real pixels within a pixel budget; the game following the phone round and back (never as a resizable window, ignoring sizes reported mid-turn, and putting right a canvas changed by something else, and the canvas pinned fully on screen at every step, v2.5.2); a failed resize keeping the old canvas; and every screen drawing at phone sizes
+- v2.6 home page: the home page on top and the game in play/, every file the page uses existing, nothing loaded from other sites, the collection showing every form with secrets kept secret, icons and pictures at the right sizes, an installable manifest that opens the game, the game page gaining the app extras once and inside its head, the home page reading the same save key the game writes, a missing placeholder stopping the build, and a home-page-only build that needs no pygbag
 
 The whole suite is also run at simulated times of day (night, morning, noon, evening), so no test depends on the real clock.
 
@@ -644,6 +654,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | App icon drawn in code, with a multi-size .ico | ✅ |
 | First-time welcome tour and one-time hints for new players | ✅ |
 | Web version (browser, incl. phones) built with pygbag and published on GitHub Pages | ✅ Touch (v2.4), portrait and wide phone layouts, sharp canvas (v2.5) |
+| Web home page with Play now, add to home screen / install as an app, kept storage | ✅ (v2.6) |
 | Reciprocal intelligence: gestures, two-way imitation, 4 pet-led games, private language (4 levels), experiments on the player, repair, negotiation, boundaries, rituals, drawing together, player model | ✅ |
 | Shared Memories + Observation Lab + report export | ✅ |
 | Versioned releases + CHANGELOG | ✅ |
@@ -652,12 +663,13 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 238 passing |
+| Automated tests | ✅ 249 passing |
 
 ## Known limitations (honest notes)
 
 - **The web version can't be built in my own build environment** (pygbag fetches its browser runtime from the internet while building). Everything up to that point is tested, GitHub's machines do the full build, and it has been confirmed working in Chrome on a PC and a phone.
 - **The sharp phone canvas (v2.5) is tested with a stand-in browser, not a real phone.** If resizing the canvas ever fails in a real browser, the game logs it in the console and carries on at its old size (stretched and softer, as before v2.5), rather than risking a blank page.
+- **The home page was checked in headless Chrome** (a phone-sized view, light and dark, a new and a returning player), where Chrome also offered to install it. Adding it to a real iPhone or Android home screen hasn't been tried yet, and neither has the game itself running from `/play/`; pygbag's page uses relative paths, as it already did one folder down at `/Nimlets/`, so it should behave the same.
 
 - **The handheld UI was checked in headless screenshots,** at sizes from 640×520 up to 1920×1080 and on every shell, light and dark, but not yet on a real Windows display.
 - **Pixel text only comes in whole sizes,** so it stays crisp. Where space is tight, some small labels (secondary hints, the smallest window size) drop to the smaller size rather than being cut off. *Smooth text* in Settings is there for anyone who prefers it.
