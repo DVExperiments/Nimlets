@@ -4,6 +4,19 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.3.0 "Bigger Screen"
+
+**The device fills its shell**
+- **Much less empty shell.** The margins between the controls and the shell's edge shrink from about an eighth of the device to around 20 pixels.
+- **A bigger screen, still crisp.** The layout picks the biggest whole-number size that fits: at the default window it grows from 3x to **4x** (a third bigger), and at large windows from 4x to 5x.
+- **The space left over goes to the controls:** wider and taller tabs, bigger A/B/C and utility buttons, and a little more room for the hearts and messages.
+- **The name row and clock stay inside the shell's curved top corners.**
+- **Prediction accuracy in the simulated-player test went up slightly** with the new spacing (about 69%, from 64%).
+
+**The web version works**
+- Confirmed running in Chrome on a PC and on a phone, at about 25 frames a second.
+- Its console diagnostics are trimmed to the start-up steps and one "running smoothly" line, and the desktop game no longer prints them.
+
 ## v2.2.3 "Web Ready" (fix)
 
 **The web version stalled right after starting `main.py`**

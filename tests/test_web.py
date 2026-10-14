@@ -219,7 +219,7 @@ class WebStartupPathTests(unittest.TestCase):
             asyncio.run(app.main_async(["--save", "/data/savegame.json", "--smoke-test", "12"]))
         said = [m for kind, m in win.console.lines]
         for step in ("[nimlets] starting", "window ready", "sound ready", "new egg", "game ready",
-                     "first frame drawn", "running: 1 frames"):
+                     "first frame drawn"):
             self.assertTrue(any(step in m for m in said), step)
         self.assertFalse([m for kind, m in win.console.lines if kind == "error"])
         self.assertIn("nimlets:savegame.json", win.localStorage.items)      # saved to the browser

@@ -279,28 +279,46 @@ class UI:
         L.shell.center = (W // 2, H // 2)
         L.radii = (min(int(sh * 0.2), sw // 4), int(sh * 0.12))
         L.fs = fs = max(13, min(22, int(H * 0.022)))
-        px = max(30, int(sw * 0.06))
-        pad_top, pad_bottom = max(18, int(sh * 0.05)), max(16, int(sh * 0.045))
+        # v2.3: tight margins. Pick the biggest crisp screen that fits, then give the space that's
+        # left to the controls instead of leaving it as empty shell.
+        px = max(14, int(sw * 0.022))
+        pad_top, pad_bottom = max(12, int(sh * 0.025)), max(16, int(sh * 0.032))
+        g = max(5, int(sh * 0.010))
         name_h, hearts_h = fs + 14, fs + 16
         msg_h = int(fs * 1.9) + 4
-        btn_h = max(48, min(84, int(sh * 0.095)))
-        g = max(6, int(sh * 0.014))
-        L.tab_w = tab_w = max(64, min(124, int(sw * 0.11)))
+        btn_min = max(48, int(sh * 0.085))
+        tab_min = max(64, int(sw * 0.10))
         pad = max(8, int(min(W, H) * 0.012))
-        avail_h = sh - pad_top - pad_bottom - name_h - hearts_h - msg_h - btn_h - 4 * g
-        avail_w = sw - 2 * px - 2 * tab_w
-        L.scale = max(1, min((avail_w - 2 * pad) // LCD_W, (avail_h - 2 * pad) // LCD_H))
-        L.lcd = pygame.Rect(0, 0, LCD_W * L.scale, LCD_H * L.scale)
-        bez_h = L.lcd.h + 2 * pad
-        used = name_h + hearts_h + bez_h + msg_h + btn_h + 4 * g
-        y = L.shell.y + pad_top + max(0, (sh - pad_top - pad_bottom - used) // 2)
-        inner_x, inner_w = L.shell.x + px, sw - 2 * px
-        L.top = pygame.Rect(inner_x, y, inner_w, name_h)
+        fixed_h = pad_top + name_h + hearts_h + msg_h + 4 * g + pad_bottom + 2 * pad
+        for scale in range(8, 0, -1):
+            lcd_w, lcd_h = LCD_W * scale, LCD_H * scale
+            if fixed_h + lcd_h + btn_min <= sh and 2 * px + 2 * tab_min + lcd_w + 2 * pad <= sw:
+                break
+        L.scale = scale
+        L.lcd = pygame.Rect(0, 0, LCD_W * scale, LCD_H * scale)
+        bez_w, bez_h = L.lcd.w + 2 * pad, L.lcd.h + 2 * pad
+        extra_h = max(0, sh - (fixed_h + L.lcd.h + btn_min))
+        extra_w = max(0, sw - (2 * px + 2 * tab_min + bez_w))
+        btn_h = min(btn_min + int(extra_h * 0.45), max(btn_min, int(sh * 0.13)), 110)
+        extra_h -= btn_h - btn_min
+        grow = min(extra_h // 4, fs)                     # a little more room for hearts and messages
+        hearts_h += grow // 2
+        msg_h += grow // 2
+        extra_h -= grow
+        g += min(extra_h // 6, g)                        # then a touch more breathing room
+        extra_h = max(0, sh - (pad_top + name_h + hearts_h + msg_h + 4 * g + pad_bottom + bez_h + btn_h))
+        L.tab_w = tab_w = min(tab_min + extra_w // 2, max(tab_min, int(sw * 0.17)), 180)
+        y = L.shell.y + pad_top + extra_h // 2
+        # the name row sits under the shell's curved top corners: keep it inside the curve
+        r_top = L.radii[0]
+        dy = max(0, r_top - (y - L.shell.y) - name_h // 2)
+        inset = r_top - int(math.sqrt(max(0, r_top * r_top - dy * dy))) + 10
+        L.top = pygame.Rect(L.shell.x + max(px, inset), y, sw - 2 * max(px, inset), name_h)
         y += name_h + g
-        L.hearts_rect = pygame.Rect(0, y, L.lcd.w + 2 * pad, hearts_h)
+        L.hearts_rect = pygame.Rect(0, y, bez_w, hearts_h)
         L.hearts_rect.centerx = L.shell.centerx
         y += hearts_h + g
-        L.bezel = pygame.Rect(0, y, L.lcd.w + 2 * pad, bez_h)
+        L.bezel = pygame.Rect(0, y, bez_w, bez_h)
         L.bezel.centerx = L.shell.centerx
         L.lcd.center = L.bezel.center
         tg = max(4, bez_h // 60)
@@ -310,6 +328,7 @@ class UI:
             x = L.bezel.left - tab_w if side == 0 else L.bezel.right
             for i in range(4):
                 L.buttons.append(pygame.Rect(x, L.bezel.y + i * (th + tg), tab_w, th))
+        inner_w = sw - 2 * px
         y = L.bezel.bottom + g
         L.msg = pygame.Rect(0, y, L.bezel.w, msg_h)
         L.msg.centerx = L.shell.centerx

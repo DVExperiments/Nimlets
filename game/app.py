@@ -466,9 +466,9 @@ class Game:
             if self.frames == 1:
                 weblog("[nimlets] first frame drawn")
             elapsed = time.time() - start
-            if elapsed >= next_report and next_report <= 30:      # a few heartbeats while it settles in
-                weblog(f"[nimlets] running: {self.frames} frames in {elapsed:.1f}s")
-                next_report += 5
+            if next_report == 0.0 and elapsed >= 5:               # one check that it's running smoothly
+                weblog(f"[nimlets] running smoothly: about {self.frames / elapsed:.0f} frames a second")
+                next_report = 1.0
             await asyncio.sleep(0)
         self.finish()
 
@@ -2078,9 +2078,9 @@ def main(argv=None):
 
 
 def weblog(msg, error=False):
-    """Print, and in the browser also write to its developer console (pygbag keeps print() to itself)."""
-    print(msg)
+    """In the browser, write start-up progress to its developer console (silent on desktop)."""
     if config.WEB:
+        print(msg)
         try:
             import platform as _p
             (_p.window.console.error if error else _p.window.console.log)(msg)

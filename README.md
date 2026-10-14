@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 2.2.3 "Web Ready"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 2.3.0 "Bigger Screen"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -49,7 +49,8 @@ The same game also runs in a web browser, built with [pygbag](https://pypi.org/p
 - **One-time setup:** in the repo's *Settings → Pages → Build and deployment*, set *Source* to **GitHub Actions**. The workflow is `.github/workflows/build-web.yml`; the address appears on the run's summary in the *Actions* tab.
 - **On your own computer:** `python tools/build_web.py --serve` builds it and serves it at http://localhost:8000. pygbag downloads its browser runtime while building, so this needs an internet connection.
 - **In the browser your pet is saved in the browser itself.** Clearing the site's data clears your pet, and a browser save is separate from the one on your computer. Reports and logs can't be exported from the browser version yet.
-- **Work in progress:** the web version plays like the desktop one for now. Touch controls and a phone layout come next.
+- **It works on phones and computers** (tested in Chrome on a PC and on a phone). It plays like the desktop version for now; touch controls and a dedicated phone layout come next.
+- **If it ever shows a problem,** the web version puts the error on screen, and the browser's developer console (Ctrl+Shift+J in Chrome) shows `[nimlets]` progress lines.
 
 ## How to play
 
@@ -645,7 +646,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 
 ## Known limitations (honest notes)
 
-- **The web version couldn't be built here.** pygbag fetches its browser runtime from the internet while building, which my build environment can't reach. Everything up to that point is tested (the async loop, browser saves, web mode, and what gets packed), and GitHub's machines do the full build.
+- **The web version can't be built in my own build environment** (pygbag fetches its browser runtime from the internet while building). Everything up to that point is tested, GitHub's machines do the full build, and it has been confirmed working in Chrome on a PC and a phone.
 
 - **The handheld UI was checked in headless screenshots,** at sizes from 640×520 up to 1920×1080 and on every shell, light and dark, but not yet on a real Windows display.
 - **Pixel text only comes in whole sizes,** so it stays crisp. Where space is tight, some small labels (secondary hints, the smallest window size) drop to the smaller size rather than being cut off. *Smooth text* in Settings is there for anyone who prefers it.
