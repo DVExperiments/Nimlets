@@ -4,6 +4,18 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.5.1 "Pocket" (fix)
+
+**Turning a phone back upright cut off the top third of the screen**
+- **The cause:** in the browser the game's window was created as *resizable*. For a resizable window, SDL quietly resets the canvas's drawing size to its on-screen size on every browser resize event, and a phone fires several of those while it turns. So SDL could shrink the canvas after the game had chosen its size, and a tall frame drawn into a shorter canvas lost its top.
+- **The fix:** in the browser the window is no longer resizable. The game alone sets the canvas's drawing size and pygbag alone sets its on-screen size, so nothing else can change it.
+- **The game now checks the page's real canvas,** not just its own idea of it, and puts it right if they ever differ.
+- **A new size must be reported twice in a row before the canvas changes,** because a turning phone reports sizes in between. Turning the phone takes effect within about a second.
+- **The page itself can no longer scroll,** so the canvas can't be pushed off the top.
+
+**Tests**
+- 3 new tests (235 in total): the window is never resizable in the browser, in-between sizes are ignored, and a canvas changed by something else is put right. Turning the phone upright, on its side and back upright again is also tested.
+
 ## v2.5.0 "Pocket"
 
 The phone layout: the game now fits a phone held either way, and stays sharp.

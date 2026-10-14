@@ -12,9 +12,20 @@ covers exactly 2 x 2 screen pixels, and the canvas is set to ``image-rendering:
 pixelated`` so the browser enlarges it without blurring. The layout then picks the
 biggest whole-number room that fits, so pixels stay square and crisp either way.
 
+Who sizes what (v2.5.1). Three things can change the canvas, and before v2.5.1 they
+fought: the game sets its *drawing* size with ``set_mode``; pygbag sets its *on-screen*
+size with CSS; and SDL, for a window made RESIZABLE, quietly resets the drawing size
+to the on-screen size on every browser resize event. A phone fires several of those
+while it turns, so SDL could shrink the drawing area after the game had chosen it,
+and a tall frame drawn into a shorter canvas lost its top. So in the browser the
+window is never RESIZABLE (``FLAGS``): the game alone owns the drawing size, pygbag
+alone owns the on-screen size, and the game checks the real canvas, not just its
+own idea of it.
+
 Everything that touches the browser is wrapped: if anything goes wrong, the game
 keeps its current canvas (as before) instead of risking a blank page.
 """
+FLAGS = 0                   # never pygame.RESIZABLE in the browser (see above)
 BUDGET = 1_200_000          # canvas pixels; the web version ran smoothly at 960 x 760 (about 0.73M)
 MIN_SIDE = 320
 
@@ -66,6 +77,31 @@ def wanted_size():
         return None
     w, h, _ = canvas_size(*bw)
     return w, h
+
+
+def canvas_buffer():
+    """The real canvas's drawing size in the page, or None if it can't be read."""
+    win = _window()
+    try:
+        return int(win.canvas.width), int(win.canvas.height)
+    except Exception:
+        return None
+
+
+def settle():
+    """Keep the page itself still: no scrolling, so the canvas can't be pushed off the top."""
+    win = _window()
+    if win is None:
+        return
+    try:
+        win.document.documentElement.style.overflow = "hidden"
+        win.document.body.style.overflow = "hidden"
+    except Exception:
+        pass
+    try:
+        win.scrollTo(0, 0)
+    except Exception:
+        pass
 
 
 def after_resize():

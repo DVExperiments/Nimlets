@@ -75,7 +75,8 @@ class Game:
         if config.WEB and pygame.display.get_surface() is not None:
             self.screen = pygame.display.get_surface()      # keep the browser's canvas, don't replace it
         else:
-            self.screen = pygame.display.set_mode((w, h), pygame.RESIZABLE)
+            from . import webscreen                 # in a browser, never RESIZABLE (see webscreen.py)
+            self.screen = pygame.display.set_mode((w, h), webscreen.FLAGS if config.WEB else pygame.RESIZABLE)
         weblog(f"[nimlets] window ready ({time.time() - t0:.1f}s)")
         self.clock = pygame.time.Clock()
         self.rng = random.Random(self.args.seed)
@@ -466,7 +467,7 @@ class Game:
         import asyncio
         start, next_report = time.time(), 0.0
         while self.frame():
-            if self.frames % 15 == 0:
+            if self.frames % 10 == 0:
                 self.web_fit()                      # a phone turned round, or the window changed size
             if self.frames == 1:
                 weblog("[nimlets] first frame drawn")
@@ -480,6 +481,11 @@ class Game:
     def web_fit(self):
         """Browser only: match the canvas to the window again after it changes shape (v2.5).
 
+        v2.5.1: a phone reports in-between sizes while it turns, so a new size must be
+        seen twice in a row before the canvas changes; the real canvas in the page is
+        checked as well as the game's own surface (SDL could change one without the
+        other); and the page is held still so it can't scroll the canvas off the top.
+
         If replacing the canvas ever fails, stop trying and keep the current one: pygbag
         still stretches it to fit, which is blurrier but always works."""
         if not config.WEB or getattr(self, "web_fit_off", False):
@@ -488,15 +494,24 @@ class Game:
         want = webscreen.wanted_size()
         if want is None or self.screen is None:
             return
+        if want != getattr(self, "web_want", None):
+            self.web_want = want                    # wait and see: it may still be turning
+            webscreen.settle()
+            return
+
+        def close(size):
+            return size is None or (abs(want[0] - size[0]) <= 2 and abs(want[1] - size[1]) <= 2)
+
         have = self.screen.get_size()
-        if abs(want[0] - have[0]) <= 2 and abs(want[1] - have[1]) <= 2:
+        if close(have) and close(webscreen.canvas_buffer()):
             return
         try:
-            screen = pygame.display.set_mode(want, pygame.RESIZABLE)
+            screen = pygame.display.set_mode(want, webscreen.FLAGS)
             if screen is None or screen.get_size() != tuple(want):
                 raise RuntimeError(f"asked for {want}, got {screen and screen.get_size()}")
             self.screen = screen
             webscreen.after_resize()
+            webscreen.settle()
             weblog(f"[nimlets] canvas {want[0]}x{want[1]}")
         except Exception as exc:
             self.web_fit_off = True
@@ -2194,8 +2209,9 @@ async def main_async(argv=None, error_frames=None):
         if pygame.display.get_surface() is None:
             from . import webscreen                 # v2.5: the window's own shape and real pixels
             size = webscreen.wanted_size() or (960, 760)
-            pygame.display.set_mode(size, pygame.RESIZABLE)
+            pygame.display.set_mode(size, webscreen.FLAGS)      # not RESIZABLE: see webscreen.py
             webscreen.after_resize()
+            webscreen.settle()
             weblog(f"[nimlets] canvas {size[0]}x{size[1]}")
         _web_screen(["Loading Nimlets...", "", "Hatching the code. This can take a little while the first time."])
         await asyncio.sleep(0)                      # let the browser show it before the heavy lifting

@@ -146,14 +146,35 @@ class FakeCanvas:
         self.style = FakeStyle()
 
 
+class FakeElement:
+    def __init__(self):
+        self.style = FakeStyle()
+
+
+class FakeDocument:
+    def __init__(self):
+        self.documentElement, self.body = FakeElement(), FakeElement()
+
+
 class FakeWindow:
     def __init__(self, w, h, dpr):
         self.innerWidth, self.innerHeight, self.devicePixelRatio = w, h, dpr
         self.canvas = FakeCanvas()
+        self.document = FakeDocument()
         self.resized = 0
+        self.scrolled = 0
 
     def window_resize(self):
         self.resized += 1
+
+    def scrollTo(self, x, y):                    # noqa: N802 (the browser's own name)
+        self.scrolled += 1
+
+
+def fit_twice(g):
+    """A new size has to be seen twice in a row (a turning phone reports sizes in between)."""
+    g.web_fit()
+    g.web_fit()
 
 
 class WebFitTests(unittest.TestCase):
@@ -176,17 +197,79 @@ class WebFitTests(unittest.TestCase):
                     mock.patch.object(config, "WEB", True), mock.patch("game.app.save_prefs"), \
                     mock.patch("game.app.weblog"):
                 g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
-                g.web_fit()
+                fit_twice(g)
                 self.assertEqual(g.screen.get_size(), (585, 1266))
                 self.assertEqual(win.canvas.style.imageRendering, "pixelated")
                 self.assertGreaterEqual(win.resized, 1)
                 g.draw()
                 self.assertEqual(g.L.kind, "portrait")
                 win.innerWidth, win.innerHeight = 844, 390               # turned on its side
-                g.web_fit()
+                fit_twice(g)
                 g.draw()
                 self.assertEqual(g.screen.get_size(), (1266, 585))
                 self.assertEqual(g.L.kind, "wide")
+                win.innerWidth, win.innerHeight = 390, 844               # and back upright
+                fit_twice(g)
+                g.draw()
+                self.assertEqual(g.screen.get_size(), (585, 1266))
+                self.assertEqual(g.L.kind, "portrait")
+                self.assertGreater(win.scrolled, 0)                       # the page is held still
+                self.assertEqual(win.document.body.style.overflow, "hidden")
+
+    def test_never_resizable_in_the_browser(self):
+        """A RESIZABLE window lets SDL reset the canvas on every browser resize event,
+        which cut the top off the screen when a phone turned back upright (v2.5.0)."""
+        from game.app import Game
+        with tempfile.TemporaryDirectory() as d:
+            pygame.display.set_mode((960, 760))
+            win = FakeWindow(390, 844, 3)
+            with mock.patch.object(self.platform, "window", win, create=True), \
+                    mock.patch.object(config, "WEB", True), mock.patch("game.app.save_prefs"), \
+                    mock.patch("game.app.weblog"):
+                g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
+                real = pygame.display.set_mode
+                calls = []
+                with mock.patch("pygame.display.set_mode",
+                                side_effect=lambda size, flags=0: calls.append(flags) or real(size, flags)):
+                    fit_twice(g)
+                self.assertEqual(calls, [0])
+                self.assertFalse(calls[0] & pygame.RESIZABLE)
+
+    def test_in_between_sizes_are_ignored(self):
+        from game.app import Game
+        with tempfile.TemporaryDirectory() as d:
+            pygame.display.set_mode((1266, 585))
+            win = FakeWindow(844, 390, 3)
+            with mock.patch.object(self.platform, "window", win, create=True), \
+                    mock.patch.object(config, "WEB", True), mock.patch("game.app.save_prefs"), \
+                    mock.patch("game.app.weblog"):
+                g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
+                fit_twice(g)
+                for w, h in ((600, 600), (390, 700), (390, 844)):     # sizes reported while turning
+                    win.innerWidth, win.innerHeight = w, h
+                    g.web_fit()
+                    self.assertEqual(g.screen.get_size(), (1266, 585))
+                g.web_fit()                                           # settled: now it changes, once
+                self.assertEqual(g.screen.get_size(), (585, 1266))
+
+    def test_a_canvas_changed_behind_our_back_is_put_right(self):
+        """If the page's real canvas no longer matches the game's surface, fit it again."""
+        from game.app import Game
+        with tempfile.TemporaryDirectory() as d:
+            pygame.display.set_mode((960, 760))
+            win = FakeWindow(390, 844, 3)
+            with mock.patch.object(self.platform, "window", win, create=True), \
+                    mock.patch.object(config, "WEB", True), mock.patch("game.app.save_prefs"), \
+                    mock.patch("game.app.weblog"):
+                g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
+                fit_twice(g)
+                self.assertEqual(g.screen.get_size(), (585, 1266))
+                win.canvas.width, win.canvas.height = 585, 844     # shrunk by someone else
+                before = win.resized
+                with mock.patch("pygame.display.set_mode", wraps=pygame.display.set_mode) as sm:
+                    g.web_fit()
+                    self.assertEqual(sm.call_count, 1)
+                self.assertGreater(win.resized, before)
 
     def test_a_failed_resize_keeps_the_old_canvas(self):
         from game.app import Game
@@ -197,7 +280,7 @@ class WebFitTests(unittest.TestCase):
                     mock.patch("game.app.weblog"):
                 g = Game(["--save", os.path.join(d, "s.json"), "--mute"])
                 with mock.patch("pygame.display.set_mode", side_effect=pygame.error("no")):
-                    g.web_fit()
+                    fit_twice(g)
                 self.assertTrue(g.web_fit_off)
                 self.assertEqual(g.screen.get_size(), (960, 760))
                 g.web_fit()                                              # and doesn't keep trying
