@@ -4,6 +4,11 @@ import sys
 
 if sys.platform == "emscripten":                      # the web version (built with pygbag)
     print("[nimlets] main.py running in the browser")
+    try:
+        import platform as _p
+        _p.window.console.log("[nimlets] main.py running in the browser")
+    except Exception:
+        pass
 else:
     # the folder this file is in (pygbag may run main.py without __file__, so don't rely on it there)
     sys.path.insert(0, os.path.dirname(os.path.abspath(globals().get("__file__", "main.py"))))

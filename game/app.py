@@ -57,6 +57,7 @@ def parse_args(argv):
 
 class Game:
     def __init__(self, argv=None):
+        t0 = time.time()
         self.args = parse_args(argv or [])
         self.settings = config.load_settings()
         self.species = config.load_species()
@@ -70,14 +71,19 @@ class Game:
             print(f"[icon] {exc}")
         w = max(MIN_W, int(self.settings["window_width"]))
         h = max(MIN_H, int(self.settings["window_height"]))
-        self.screen = pygame.display.set_mode((w, h), pygame.RESIZABLE)
+        if config.WEB and pygame.display.get_surface() is not None:
+            self.screen = pygame.display.get_surface()      # keep the browser's canvas, don't replace it
+        else:
+            self.screen = pygame.display.set_mode((w, h), pygame.RESIZABLE)
+        weblog(f"[nimlets] window ready ({time.time() - t0:.1f}s)")
         self.clock = pygame.time.Clock()
         self.rng = random.Random(self.args.seed)
         self.renderer = SpriteRenderer(self.species)
         self.ui = UI(self.renderer, self.species)
         self.room = Room(self.settings)
         self.effects = Effects()
-        self.audio = Audio(self.settings.get("sound_enabled", True) and not self.args.mute)
+        self.audio = Audio(self.settings.get("sound_enabled", True) and not self.args.mute, lazy=config.WEB)
+        weblog(f"[nimlets] sound ready ({time.time() - t0:.1f}s)")
         self.lcd = pygame.Surface((LCD_W, LCD_H))
         self.beh = Behaviour(self.rng)
         self.world = World()
@@ -152,6 +158,7 @@ class Game:
         loaded = self.load()
         if not loaded:
             self.new_game()
+        weblog(f"[nimlets] {'save loaded' if loaded else 'new egg'} ({time.time() - t0:.1f}s)")
         self.welcome_page = 0
         self.hint_t = 0.0
         if not self.prefs.get("welcomed"):
@@ -454,7 +461,14 @@ class Game:
     async def run_async(self):
         """The same loop for the web version: hand control back to the browser after every frame."""
         import asyncio
+        start, next_report = time.time(), 0.0
         while self.frame():
+            if self.frames == 1:
+                weblog("[nimlets] first frame drawn")
+            elapsed = time.time() - start
+            if elapsed >= next_report and next_report <= 30:      # a few heartbeats while it settles in
+                weblog(f"[nimlets] running: {self.frames} frames in {elapsed:.1f}s")
+                next_report += 5
             await asyncio.sleep(0)
         self.finish()
 
@@ -2063,6 +2077,17 @@ def main(argv=None):
     Game(argv).run()
 
 
+def weblog(msg, error=False):
+    """Print, and in the browser also write to its developer console (pygbag keeps print() to itself)."""
+    print(msg)
+    if config.WEB:
+        try:
+            import platform as _p
+            (_p.window.console.error if error else _p.window.console.log)(msg)
+        except Exception:
+            pass
+
+
 def _web_screen(lines, colour=(245, 240, 255)):
     """Draw a few lines of text on a plain screen, using only the game's own pixel font."""
     from .pixelfont import PixelFont
@@ -2095,18 +2120,18 @@ async def main_async(argv=None, error_frames=None):
     import asyncio
     import traceback
     try:
-        print("[nimlets] starting")
+        weblog("[nimlets] starting")
         pygame.init()
         if pygame.display.get_surface() is None:
             pygame.display.set_mode((960, 760), pygame.RESIZABLE)
         _web_screen(["Loading Nimlets...", "", "Hatching the code. This can take a little while the first time."])
         await asyncio.sleep(0)                      # let the browser show it before the heavy lifting
         game = Game(argv or [])
-        print("[nimlets] ready")
+        weblog("[nimlets] game ready, starting the loop")
         await game.run_async()
-    except Exception:
+    except BaseException:                           # anything at all, so it's never silently grey
         text = traceback.format_exc()
-        print(text)
+        weblog(text, error=True)
         lines = ["Sorry - Nimlets hit a problem while starting.", "",
                  "Please send this to the developer (a screenshot is perfect):", ""] + text.strip().splitlines()
         frames = 0

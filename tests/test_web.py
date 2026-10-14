@@ -152,3 +152,60 @@ class WebStartupTests(unittest.TestCase):
         colours = {tuple(screen.get_at((x, 40))[:3]) for x in range(20, 400)}
         self.assertGreater(len(colours), 1)                               # some text was drawn
         pygame.quit()
+
+
+class FakeConsole:
+    def __init__(self):
+        self.lines = []
+
+    def log(self, msg):
+        self.lines.append(("log", str(msg)))
+
+    def error(self, msg):
+        self.lines.append(("error", str(msg)))
+
+
+class FakeWindow:
+    def __init__(self):
+        self.console = FakeConsole()
+        self.localStorage = FakeLocalStorage()
+
+
+class WebStartupPathTests(unittest.TestCase):
+    def test_the_whole_web_start_up_reports_progress_to_the_console(self):
+        import platform
+        import game.app as app
+        win = FakeWindow()
+        with mock.patch.object(platform, "window", win, create=True), mock.patch.object(config, "WEB", True), \
+                mock.patch.object(save, "WEB", True), mock.patch.object(save, "STORE", None):
+            asyncio.run(app.main_async(["--save", "/data/savegame.json", "--smoke-test", "12"]))
+        said = [m for kind, m in win.console.lines]
+        for step in ("[nimlets] starting", "window ready", "sound ready", "new egg", "game ready",
+                     "first frame drawn", "running: 1 frames"):
+            self.assertTrue(any(step in m for m in said), step)
+        self.assertFalse([m for kind, m in win.console.lines if kind == "error"])
+        self.assertIn("nimlets:savegame.json", win.localStorage.items)      # saved to the browser
+
+    def test_web_start_up_reuses_the_canvas_and_makes_sounds_lazily(self):
+        import platform
+        from game.app import Game
+        with mock.patch.object(platform, "window", FakeWindow(), create=True), mock.patch.object(config, "WEB", True):
+            pygame.init()
+            canvas = pygame.display.set_mode((960, 760))
+            g = Game(["--save", "/data/savegame.json"])
+            self.assertIs(pygame.display.get_surface(), canvas)                # not replaced
+            self.assertTrue(g.audio.lazy)
+            if g.audio.ok:
+                self.assertEqual(g.audio.sounds, {})                         # nothing made up front
+                g.audio.play("page")
+                self.assertIn("page", g.audio.sounds)                         # made when first needed
+            pygame.quit()
+
+    def test_desktop_still_makes_all_sounds_up_front(self):
+        from game.app import Game
+        with tempfile.TemporaryDirectory() as d:
+            g = Game(["--save", os.path.join(d, "s.json")])
+            self.assertFalse(g.audio.lazy)
+            if g.audio.ok:
+                self.assertGreaterEqual(len(g.audio.sounds), 20)
+            pygame.quit()

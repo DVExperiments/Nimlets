@@ -4,6 +4,17 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.2.2 "Web Ready" (fix)
+
+**The web version showed "Loading Nimlets..." and then went grey**
+- **Sounds are made the first time they're played** in the browser, instead of all 34 at start-up. Generating them sample by sample in Python is slow in a browser, and the browser's sound settings made it about four times more work than on a computer. The desktop version still makes them up front.
+- **The game keeps the loading screen's canvas** in the browser instead of opening a second window, which could blank the page.
+- **Progress goes straight into the browser's developer console,** with timings for each start-up step and a few heartbeats once it's running. pygbag keeps Python's own output to itself, so before this the console couldn't show what was happening.
+- **Any error at all during start-up** is now shown on screen and in the console.
+
+**Tests**
+- 3 new tests (204 in total), including the whole web start-up path with a stand-in browser console and storage.
+
 ## v2.2.1 "Web Ready" (fix)
 
 **The web version showed a grey screen after "Ready to start"**

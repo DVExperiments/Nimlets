@@ -47,9 +47,12 @@ SOUNDS = {
 
 
 class Audio:
-    def __init__(self, enabled=True):
+    def __init__(self, enabled=True, lazy=False):
+        """lazy=True (the web version) makes each sound the first time it's played, instead of all
+        of them at start-up: generating samples in Python is slow in a browser."""
         self.enabled = enabled
         self.ok = False
+        self.lazy = lazy
         self.sounds = {}
         try:
             if not pygame.mixer.get_init():
@@ -57,8 +60,9 @@ class Audio:
             init = pygame.mixer.get_init()
             if init and init[1] in (-16, 16, 32):
                 self.rate, self.size, self.channels = init
-                for name, (notes, wave, vol) in SOUNDS.items():
-                    self.sounds[name] = self._make(notes, wave, vol)
+                if not lazy:
+                    for name, (notes, wave, vol) in SOUNDS.items():
+                        self.sounds[name] = self._make(notes, wave, vol)
                 self.ok = True
         except (pygame.error, ValueError, TypeError) as exc:
             print(f"[audio] sound disabled: {exc}")
@@ -88,7 +92,14 @@ class Audio:
         return pygame.mixer.Sound(buffer=buf.tobytes())
 
     def play(self, name):
-        if self.enabled and self.ok and name in self.sounds:
+        if not (self.enabled and self.ok):
+            return
+        if name not in self.sounds and self.lazy and name in SOUNDS:
+            try:
+                self.sounds[name] = self._make(*SOUNDS[name])
+            except (pygame.error, ValueError, TypeError):
+                return
+        if name in self.sounds:
             self.sounds[name].play()
 
     def toggle(self):
