@@ -49,7 +49,8 @@ The same game also runs in a web browser, built with [pygbag](https://pypi.org/p
 - **One-time setup:** in the repo's *Settings → Pages → Build and deployment*, set *Source* to **GitHub Actions**. The workflow is `.github/workflows/build-web.yml`; the address appears on the run's summary in the *Actions* tab.
 - **On your own computer:** `python tools/build_web.py --serve` builds it and serves it at http://localhost:8000. pygbag downloads its browser runtime while building, so this needs an internet connection.
 - **In the browser your pet is saved in the browser itself.** Clearing the site's data clears your pet, and a browser save is separate from the one on your computer. Reports and logs can't be exported from the browser version yet.
-- **It works on phones and computers** (tested in Chrome on a PC and on a phone). It plays like the desktop version for now; touch controls and a dedicated phone layout come next.
+- **It works on phones and computers** (tested in Chrome on a PC and on a phone).
+- **Touch (v2.4):** with a finger, the pet only sees you while you're touching. Tap the pet, the room and its things as you would click them. Tabs press in and act when you lift (slide off to cancel). Drag on the lower wall to draw, drag the bed to move it, and drag anywhere else in the room to make a gesture; lifting your finger ends it. A dedicated phone layout (portrait and landscape) comes next.
 - **If it ever shows a problem,** the web version puts the error on screen, and the browser's developer console (Ctrl+Shift+J in Chrome) shows `[nimlets]` progress lines.
 
 ## How to play
@@ -425,6 +426,7 @@ game/minigames.py     Higher or Lower, Which Way?, Timing Star
 game/sprites.py       procedural pixel-art creature/egg generator
 game/room.py          room, window sky/weather, seasons, mess, lighting, particles
 game/ui.py            layout, buttons, menus, status/records panels
+game/pointer.py       mouse or finger: where the pointer is, and whether it is there at all (v2.4)
 game/audio.py         chiptune sound effects synthesised at startup
 game/records.py       collection, lineage, totals
 game/save.py          atomic JSON save, .bak fallback on corruption
@@ -447,6 +449,7 @@ build_exe.bat         one-click build on Windows (installs what it needs, then r
 .github/workflows/build-web.yml       builds the web version and publishes it on GitHub Pages
 tests/test_build_ready.py  the Nimlets data folder, copying old saves, the test save, the icon
 tests/test_welcome.py      the welcome tour, holding time, skipping, replaying, and the one-time hints
+tests/test_touch.py        the pointer: a finger only there while touching, tabs on release, finger gestures
 tests/test_web.py          the async loop, saving to browser storage, web mode, and what the web build packs
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
@@ -497,7 +500,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 206 tests cover:
+The 218 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -563,6 +566,7 @@ The 206 tests cover:
 - v2.1 welcome: a new player gets the tour and time holds still without touching their own pause, pages turn with keys, A/B/C and buttons, skipping, existing players never see it unless they ask, every page draws in both text styles at three sizes, each hint shows once, hints never interrupt another message, and what triggers each hint
 
 - v2.2 web-ready: saves and preferences going to browser storage instead of files (with the backup fallback), the game in web mode (no folder buttons, friendly messages for exports, reopening the page restores the pet), the async loop, saving when the window loses focus, the web build packing only the game, and every preference surviving a restart
+- v2.4 touch: a finger exists only while touching (plus a short afterglow), no phantom cursor or false trust after a tap, tabs acting on release and cancelling when you slide off, mouse clicks still immediate, a finger drag ending its gesture on lift, and no heading read from a finger
 
 The whole suite is also run at simulated times of day (night, morning, noon, evening), so no test depends on the real clock.
 
@@ -633,7 +637,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Saves in a per-user Nimlets folder, with a one-time copy of old saves | ✅ |
 | App icon drawn in code, with a multi-size .ico | ✅ |
 | First-time welcome tour and one-time hints for new players | ✅ |
-| Web version (browser, incl. phones) built with pygbag and published on GitHub Pages | ⚠️ Runs like desktop; touch and phone layout to come |
+| Web version (browser, incl. phones) built with pygbag and published on GitHub Pages | ⚠️ Touch input done (v2.4); phone layout to come |
 | Reciprocal intelligence: gestures, two-way imitation, 4 pet-led games, private language (4 levels), experiments on the player, repair, negotiation, boundaries, rituals, drawing together, player model | ✅ |
 | Shared Memories + Observation Lab + report export | ✅ |
 | Versioned releases + CHANGELOG | ✅ |
@@ -642,7 +646,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 206 passing |
+| Automated tests | ✅ 218 passing |
 
 ## Known limitations (honest notes)
 

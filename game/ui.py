@@ -7,6 +7,7 @@ import math
 
 import pygame
 
+from . import pointer
 from .config import LCD_W, LCD_H
 from .memory import FOODS, GAMES
 from .pixelfont import PixelFont
@@ -254,7 +255,7 @@ class UI:
             col = t.tab_on if on else t.panel_alt
         if not enabled:
             col = t.button_off
-        if rect.collidepoint(pygame.mouse.get_pos()) and enabled:
+        if rect.collidepoint(pointer.hover_pos()) and enabled:
             pygame.draw.rect(surf, t.select_edge, rect.inflate(4, 4), 2, border_radius=rect.h // 2 + 2)
         pygame.draw.rect(surf, col, rect, border_radius=rect.h // 2)
         ink = (255, 255, 255) if danger else (t.ink if enabled else t.ink_soft)
@@ -462,7 +463,7 @@ class UI:
 
     def draw_controls(self, screen, L, info, pal):
         fs = L.fs
-        mouse = pygame.mouse.get_pos()
+        mouse = pointer.hover_pos()
         for name, rect in L.toggles.items():
             if info.get("poke_toggle") == name:
                 rect = rect.move(0, 2 if int(pygame.time.get_ticks() / 90) % 2 else 0)
@@ -564,7 +565,7 @@ class UI:
         self.text(screen, menu.title, (rect.centerx, rect.y + 12), fs + 2, t.ink, bold=True, align="center")
         menu.rects = []
         y = rect.y + int(fs * 2.6)
-        mouse = pygame.mouse.get_pos()
+        mouse = pointer.hover_pos()
         for i, (label, value, note) in enumerate(menu.items):
             r = pygame.Rect(rect.x + 14, y, rect.w - 28, row - 6)
             if r.collidepoint(mouse):
@@ -637,7 +638,7 @@ class UI:
         cw = (grid.w - gap * (cols - 1)) // cols
         ch = (grid.h - gap * (rows - 1)) // max(1, rows)
         self.hit["shop_cards"] = []
-        mouse = pygame.mouse.get_pos()
+        mouse = pointer.hover_pos()
         # one name size for every card: the largest at which all the names fit
         k0 = max(2, min(6, (ch - 3 * fs - 30) // 10))
         name_w = cw - 12 * k0 - 40

@@ -34,6 +34,7 @@ from .room import Room, Effects
 from .save import save_game, load_game, load_prefs, save_prefs
 from .sprites import SpriteRenderer
 from .ui import UI, Menu, ACTION_IDS, THEME_SWATCHES
+from .pointer import POINTER
 
 MIN_W, MIN_H = 640, 520
 
@@ -139,6 +140,7 @@ class Game:
         self.obs_mode = False
         self.obs_page = 0
         self.drag_bed = None
+        self.press_tab = None       # v2.4: a finger pressing a tab (the action fires on release)
         self.cursor_prev = None
         self.cursor_vel = (0.0, 0.0)
         self.was_speed = 1
@@ -366,7 +368,7 @@ class Game:
         trip = self.trip
         if not trip or not self.L:
             return
-        cursor = pygame.mouse.get_pos() if pygame.mouse.get_focused() else None
+        cursor = POINTER.present(afterglow=True)
         self.trip_state = trip.update(dt, self.L, cursor)
         for ev, arg in trip.events:
             m = self.mind
@@ -442,6 +444,7 @@ class Game:
                 running = False
         self.update(dt)
         self.draw()
+        POINTER.tick(dt)
         self.frames = getattr(self, "frames", 0) + 1
         if self.args.smoke_test and self.frames >= self.args.smoke_test:
             if self.args.screenshot:
@@ -860,10 +863,10 @@ class Game:
 
     # ------------------------------------------------------------ living mind
     def lcd_cursor(self):
-        if not self.L or not pygame.mouse.get_focused():
+        if not self.L:
             return None
-        pos = pygame.mouse.get_pos()
-        if not self.L.lcd.collidepoint(pos) or self.menu or self.panel or self.minigame:
+        pos = POINTER.present(afterglow=True)       # a lifted finger lingers a moment, then is gone
+        if pos is None or not self.L.lcd.collidepoint(pos) or self.menu or self.panel or self.minigame:
             return None
         return self.lcd_pos(pos)
 
@@ -875,10 +878,9 @@ class Game:
         return abs(lx - self.beh.x) < 13 and floor - 30 < ly < floor + 2
 
     def window_cursor(self):
-        """Cursor position inside this game window only (None when outside or unfocused)."""
-        if not pygame.mouse.get_focused():
-            return None
-        return pygame.mouse.get_pos()
+        """Cursor position inside this game window only (None when outside or unfocused,
+        or, on a touchscreen, when no finger is down)."""
+        return POINTER.present()
 
     def cursor_zone(self, dt):
         """Which part of the interface the cursor is in, and which button it is heading toward."""
@@ -918,7 +920,8 @@ class Game:
             left = pos[0] < L.lcd.centerx
             targets = {k: r for k, r in targets.items() if (r.centerx < L.lcd.centerx) == left}
         targets.update({k: v for k, v in L.toggles.items() if k in ("speed", "pause")})
-        heading = heading_target(pos, self.cursor_vel, targets) if zone not in targets else None
+        # a finger doesn't travel between taps, so there's nothing to read a heading from
+        heading = heading_target(pos, self.cursor_vel, targets) if zone not in targets and not POINTER.touch else None
         return zone or "shell", heading
 
     def update_mind(self, dt):
@@ -929,7 +932,10 @@ class Game:
         weather = self.room.weather(self.world_time, self.room.season(lt.tm_mon))
         zone, heading = self.cursor_zone(dt)
         if not self.evolving and not self.departing and not self.minigame:
-            pressed = bool(pygame.mouse.get_pressed()[0]) or self.stroke is not None
+            if POINTER.touch:      # a finger is always 'pressed': only drawing or dragging stop a gesture
+                pressed = self.stroke is not None or bool(self.drag_bed) or bool(self.sponge)
+            else:
+                pressed = bool(pygame.mouse.get_pressed()[0]) or self.stroke is not None
             self.mind.update(dt, cursor, hover_button, hover_pet, lt.tm_hour + lt.tm_min / 60.0,
                              weather, self.world_time, pressed, zone, heading)
         else:
@@ -1020,6 +1026,9 @@ class Game:
     def handle(self, ev):
         if ev.type == pygame.QUIT:
             return False
+        touch = POINTER.on_event(ev, self.screen.get_size() if self.screen else None)
+        if ev.type in (pygame.FINGERDOWN, pygame.FINGERUP, pygame.FINGERMOTION):
+            return True                 # SDL also sends these as mouse events; act on those
         if ev.type == pygame.VIDEORESIZE:
             if ev.w < MIN_W or ev.h < MIN_H:
                 pygame.display.set_mode((max(MIN_W, ev.w), max(MIN_H, ev.h)), pygame.RESIZABLE)
@@ -1039,11 +1048,18 @@ class Game:
             self.on_key(ev.key)
         elif ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 1:
             self.user_input()
-            self.on_click(ev.pos)
+            tab = self.tab_at(ev.pos) if touch else None
+            if tab is not None:
+                self.press_tab = tab    # a finger on a tab: it presses in, and acts on release
+                self.hover = tab
+            else:
+                self.on_click(ev.pos)
         elif ev.type == pygame.MOUSEBUTTONDOWN and ev.button == 3 and self.sponge:
             self.end_sponge()
         elif ev.type == pygame.MOUSEBUTTONUP and ev.button == 1:
             self.finish_stroke()
+            if touch:
+                self.finger_up(ev.pos)
         elif ev.type == pygame.MOUSEWHEEL:
             if self.panel == "book" and self.book_tab == 3:
                 self.scroll_book(-ev.y * 2)
@@ -1060,9 +1076,29 @@ class Game:
                 from .world import BED_RANGE
                 lx = self.lcd_pos(ev.pos)[0]
                 self.world.bed_x = max(BED_RANGE[0], min(BED_RANGE[1], lx - self.drag_bed["dx"]))
-            if self.L:
+            if self.L and not touch:
                 self.hover = next((i for i, r in enumerate(self.L.buttons) if r.collidepoint(ev.pos)), None)
+            elif self.L and self.press_tab is not None:
+                # sliding a finger off a pressed tab lets it pop back out (and cancels it)
+                self.hover = self.press_tab if self.L.buttons[self.press_tab].collidepoint(ev.pos) else None
         return True
+
+    def tab_at(self, pos):
+        """The action tab a touch landed on, if a tap there would act as a tab press."""
+        if not self.L or self.obs_mode or self.panel or self.menu or self.minigame:
+            return None
+        if self.trip and self.trip.hit(pos, 32 * self.outside_scale()):
+            return None
+        return next((i for i, r in enumerate(self.L.buttons) if r.collidepoint(pos)), None)
+
+    def finger_up(self, pos):
+        """A finger lifted: fire a pressed tab if it's still under the finger, end any
+        air gesture, and let go of every hover (there's no finger left to hover)."""
+        tab, self.press_tab = self.press_tab, None
+        if tab is not None and self.L and self.L.buttons[tab].collidepoint(pos):
+            self.on_click(pos)
+        self.hover = None
+        self.mind.recip.tracker.finish(self.mind.clock)
 
     def user_input(self):
         idle = self.mind.idle_t

@@ -15,6 +15,7 @@ never interrupt another message, and each appears once (remembered in preference
 """
 import pygame
 
+from . import pointer
 from .book import BOX, COVER, DESK, INK, PAPER, SOFT
 
 PAGES = [
@@ -154,7 +155,7 @@ class Welcome:
                 max(10, fs - 5), (210, 225, 214), align="center")
 
     def _button(self, screen, r, label, fs, dark):
-        hover = r.collidepoint(pygame.mouse.get_pos())
+        hover = r.collidepoint(pointer.hover_pos())
         if dark:
             pygame.draw.rect(screen, (85, 70, 62) if hover else INK, r, border_radius=12)
             ink = PAPER

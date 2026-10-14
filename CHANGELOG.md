@@ -4,6 +4,32 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.4.0 "Fingertips"
+
+The first part of touch support: the game now knows the difference between a mouse and a finger.
+
+**A finger is only there while it's touching**
+- **No more phantom cursor on touchscreens.** A phone reports the last tap as "the mouse" even after the finger lifts, so the pet saw a cursor parked wherever you last tapped. It could think you were resting on Feed for minutes, build trust from a hand that wasn't there, and keep the last tapped tab highlighted. Now, on a touchscreen, the pointer exists only while a finger is down.
+- **Its eyes linger for a moment** (under a second) at the spot your finger lifted from, then the pointer is gone.
+- **Mouse play is unchanged.** The mode follows your last input, so a touchscreen laptop can switch between the two freely.
+
+**Tabs press in, and act when you lift**
+- With a finger, a tab presses in when touched and acts when you lift on it. Slide off before lifting to cancel.
+- A mouse click still acts straight away.
+
+**Gestures with a finger**
+- A drag ends its gesture the moment the finger lifts; there's no need to pause at the end. (With a mouse, gestures still end on a pause.)
+- Where the drag starts decides what it does: on the lower wall it draws, on the bed it moves the bed, and anywhere else in the room it's a gesture.
+
+**The Observer**
+- It no longer reads a "heading" from a finger. A finger doesn't travel between taps, so there's nothing honest to read.
+
+**Under the hood**
+- New `game/pointer.py`: one place that tracks mouse or touch, where the pointer is, and whether it's pressed. The room, the Observer, trips outside the room, and every hover highlight (tabs, menus, the shop, Settings, the Records book and the welcome tour) now ask it instead of reading the mouse directly.
+
+**Tests**
+- 12 new tests (218 in total): the finger disappearing on lift, the afterglow, finger events, switching back to a mouse, no phantom cursor or false trust after a tap, tabs acting on release, sliding off to cancel, mouse clicks still immediate, a finger drag becoming a gesture, and no heading from a finger.
+
 ## v2.3.0 "Bigger Screen"
 
 **The device fills its shell**

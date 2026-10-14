@@ -13,6 +13,7 @@ import time
 
 import pygame
 
+from . import pointer
 from . import shells
 from .genetics import MUTATION_NAMES
 from .memory import FOODS, GAMES
@@ -125,7 +126,7 @@ class Book:
         return y
 
     def button(self, screen, r, label, dark=True, on=True):
-        hover = r.collidepoint(pygame.mouse.get_pos())
+        hover = r.collidepoint(pointer.hover_pos())
         if dark:
             pygame.draw.rect(screen, (85, 70, 62) if hover else DARK_BTN, r, border_radius=12)
             ink = PAPER

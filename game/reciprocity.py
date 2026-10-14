@@ -173,6 +173,16 @@ class GestureTracker:
                 self.out.append((t, g, (cx, cy)))
             self.points = [self.points[-1]]
 
+    def finish(self, t):
+        """End the stroke now (v2.4: a finger lifting ends a gesture; no pause needed)."""
+        if len(self.points) > 4:
+            g = classify(self.points)
+            if g:
+                cx = sum(p[1] for p in self.points) / len(self.points)
+                cy = sum(p[2] for p in self.points) / len(self.points)
+                self.out.append((t, g, (cx, cy)))
+        self.reset()
+
     def pop(self):
         out, self.out = self.out, []
         return out
