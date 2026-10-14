@@ -121,3 +121,34 @@ class WebModeGameTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WebStartupTests(unittest.TestCase):
+    def test_main_py_runs_without___file__(self):
+        """pygbag may run main.py without __file__ set; the web branch must still start the game."""
+        import game.app as app
+        started = []
+
+        async def fake_main(argv=None):
+            started.append(argv)
+
+        with open(os.path.join(ROOT, "main.py"), encoding="utf-8") as f:
+            code = compile(f.read(), "main.py", "exec")
+        with mock.patch.object(sys, "platform", "emscripten"), mock.patch.object(app, "main_async", fake_main):
+            exec(code, {"__name__": "__main__"})                 # note: no __file__ here
+        self.assertEqual(started, [[]])
+
+    def test_a_startup_crash_is_shown_on_screen(self):
+        import game.app as app
+
+        def boom(*a, **k):
+            raise RuntimeError("pretend startup crash")
+
+        with mock.patch.object(app, "Game", boom), mock.patch("builtins.print"):
+            asyncio.run(app.main_async([], error_frames=2))
+        screen = pygame.display.get_surface()
+        self.assertIsNotNone(screen)
+        self.assertNotEqual(screen.get_at((5, 5))[:3], (128, 128, 128))   # not a blank grey page
+        colours = {tuple(screen.get_at((x, 40))[:3]) for x in range(20, 400)}
+        self.assertGreater(len(colours), 1)                               # some text was drawn
+        pygame.quit()

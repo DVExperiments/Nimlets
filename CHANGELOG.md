@@ -4,6 +4,17 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.2.1 "Web Ready" (fix)
+
+**The web version showed a grey screen after "Ready to start"**
+- **A likely cause is fixed.** `main.py` worked out its own folder from `__file__`, which a browser may not provide, so the game could crash on its very first line. It no longer relies on that in the browser.
+- **The web version now shows "Loading Nimlets..." straight away.**
+- **If anything goes wrong while starting, the error appears on screen** (and in the browser's console) instead of a blank page, so it can be reported with a screenshot.
+- **Progress messages in the browser console** (`[nimlets] ...`) show how far startup got.
+
+**Tests**
+- 2 new tests (201 in total): `main.py` starting without `__file__`, and a startup crash being shown on screen.
+
 ## v2.2.0 "Web Ready"
 
 The first step towards phones: the same game now runs in a web browser.

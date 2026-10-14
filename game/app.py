@@ -2063,6 +2063,57 @@ def main(argv=None):
     Game(argv).run()
 
 
-async def main_async(argv=None):
-    """Entry point for the web version (see main.py)."""
-    await Game(argv or []).run_async()
+def _web_screen(lines, colour=(245, 240, 255)):
+    """Draw a few lines of text on a plain screen, using only the game's own pixel font."""
+    from .pixelfont import PixelFont
+    screen = pygame.display.get_surface()
+    if screen is None:
+        return
+    screen.fill((43, 34, 64))
+    W = screen.get_width()
+    size = 16 if W >= 700 else 10
+    f = PixelFont(size)
+    y = 24
+    for line in lines:
+        while line and y < screen.get_height() - 20:          # wrap long lines to the window
+            cut = len(line)
+            while cut > 1 and f.size(line[:cut])[0] > W - 40:
+                cut -= 1
+            screen.blit(f.render(line[:cut], True, colour), (20, y))
+            line = line[cut:]
+            y += f.get_linesize()
+        y += 4
+    pygame.display.flip()
+
+
+async def main_async(argv=None, error_frames=None):
+    """Entry point for the web version (see main.py).
+
+    Shows a loading screen straight away, and if anything goes wrong, shows the error
+    on screen (as well as in the browser's console) instead of leaving a blank page.
+    """
+    import asyncio
+    import traceback
+    try:
+        print("[nimlets] starting")
+        pygame.init()
+        if pygame.display.get_surface() is None:
+            pygame.display.set_mode((960, 760), pygame.RESIZABLE)
+        _web_screen(["Loading Nimlets...", "", "Hatching the code. This can take a little while the first time."])
+        await asyncio.sleep(0)                      # let the browser show it before the heavy lifting
+        game = Game(argv or [])
+        print("[nimlets] ready")
+        await game.run_async()
+    except Exception:
+        text = traceback.format_exc()
+        print(text)
+        lines = ["Sorry - Nimlets hit a problem while starting.", "",
+                 "Please send this to the developer (a screenshot is perfect):", ""] + text.strip().splitlines()
+        frames = 0
+        while error_frames is None or frames < error_frames:
+            try:
+                _web_screen(lines, (255, 220, 200))
+            except Exception as exc:                # even drawing failed: the console still has it
+                print(f"[nimlets] could not draw the error: {exc}")
+            await asyncio.sleep(0.25)
+            frames += 1
