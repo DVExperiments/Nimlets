@@ -50,7 +50,9 @@ The same game also runs in a web browser, built with [pygbag](https://pypi.org/p
 - **On your own computer:** `python tools/build_web.py --serve` builds it and serves it at http://localhost:8000. pygbag downloads its browser runtime while building, so this needs an internet connection.
 - **In the browser your pet is saved in the browser itself.** Clearing the site's data clears your pet, and a browser save is separate from the one on your computer. Reports and logs can't be exported from the browser version yet.
 - **It works on phones and computers** (tested in Chrome on a PC and on a phone).
-- **Touch (v2.4):** with a finger, the pet only sees you while you're touching. Tap the pet, the room and its things as you would click them. Tabs press in and act when you lift (slide off to cancel). Drag on the lower wall to draw, drag the bed to move it, and drag anywhere else in the room to make a gesture; lifting your finger ends it. A dedicated phone layout (portrait and landscape) comes next.
+- **Touch (v2.4):** with a finger, the pet only sees you while you're touching. Tap the pet, the room and its things as you would click them. Tabs press in and act when you lift (slide off to cancel). Drag on the lower wall to draw, drag the bed to move it, and drag anywhere else in the room to make a gesture; lifting your finger ends it.
+- **Phone layouts (v2.5):** hold the phone upright and the room spans the screen, with the eight tabs in a 4 × 2 grid beneath it and the buttons in thumb reach. Turn it on its side and the room sits in the middle with four tabs either side. It switches by itself when you turn the phone (or choose in Settings → Screen).
+- **Sharp on phones (v2.5):** the game draws at the phone's real pixel size (or exactly half of it, when that would be too many pixels to draw smoothly), so the pixel art stays crisp instead of being stretched.
 - **If it ever shows a problem,** the web version puts the error on screen, and the browser's developer console (Ctrl+Shift+J in Chrome) shows `[nimlets]` progress lines.
 
 ## How to play
@@ -104,6 +106,7 @@ Interesting things your pet does are written to a **Diary** (Records → Diary, 
 - **Theme colour.** Choose "Pet colour" (the device matches your pet and changes each generation), Peach, Lemon, Mint, Sky, Lavender or Rose. Use ←/→ to cycle.
 - **Appearance.** Light or Dark (**D**), and **Pixel text** or **Smooth text**. Pixel text is the game's own pixel font; switch to smooth text if you find it easier to read.
 - **Shell.** Click the left or right half to cycle through *Match my pet* and the shells you've unlocked (see *Shells* below). Sound has its own button on the device, or press **M**.
+- **Screen.** *Auto* (the default) picks the layout that gives the biggest crisp room for the window's shape: the classic handheld on a computer, the upright layout on a phone held upright, and the wide layout on a phone on its side. *Portrait* always uses the upright layout (centred on a wide window). *Landscape* uses whichever of the classic and wide layouts fits better.
 - **Wandering** (on by default): lets a pet that's used to going outside take long walks around the whole device. See "The Frontier" below.
 - **Open folder** opens your Nimlets folder, with saves, backups and exported reports. **Welcome tour** replays the first-time tour.
 - **Reset.**
@@ -427,6 +430,7 @@ game/sprites.py       procedural pixel-art creature/egg generator
 game/room.py          room, window sky/weather, seasons, mess, lighting, particles
 game/ui.py            layout, buttons, menus, status/records panels
 game/pointer.py       mouse or finger: where the pointer is, and whether it is there at all (v2.4)
+game/webscreen.py     sizing the browser canvas to the phone's real pixels, so it stays sharp (v2.5)
 game/audio.py         chiptune sound effects synthesised at startup
 game/records.py       collection, lineage, totals
 game/save.py          atomic JSON save, .bak fallback on corruption
@@ -450,6 +454,7 @@ build_exe.bat         one-click build on Windows (installs what it needs, then r
 tests/test_build_ready.py  the Nimlets data folder, copying old saves, the test save, the icon
 tests/test_welcome.py      the welcome tour, holding time, skipping, replaying, and the one-time hints
 tests/test_touch.py        the pointer: a finger only there while touching, tabs on release, finger gestures
+tests/test_phone.py        portrait and wide layouts, the Screen setting, canvas sizing, following the phone round
 tests/test_web.py          the async loop, saving to browser storage, web mode, and what the web build packs
 saves/example_save.json  example save (a young adult Luminelle); other saves are git-ignored
 assets/               sprite sheet preview, project cover images
@@ -500,7 +505,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 218 tests cover:
+The 232 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -567,6 +572,7 @@ The 218 tests cover:
 
 - v2.2 web-ready: saves and preferences going to browser storage instead of files (with the backup fallback), the game in web mode (no folder buttons, friendly messages for exports, reopening the page restores the pet), the async loop, saving when the window loses focus, the web build packing only the game, and every preference surviving a restart
 - v2.4 touch: a finger exists only while touching (plus a short afterglow), no phantom cursor or false trust after a tap, tabs acting on release and cancelling when you slide off, mouse clicks still immediate, a finger drag ending its gesture on lift, and no heading read from a finger
+- v2.5 phone layouts: upright phones get the portrait layout and phones on their side the wide one, with everything on the device and nothing overlapping at many phone sizes; desktop windows keep the classic device; the Screen setting (including Portrait on a wide window); escape trips staying on the device; long messages wrapping onto two lines instead of shrinking; the browser canvas matching the phone's real pixels within a pixel budget; the game following the phone round; a failed resize keeping the old canvas; and every screen drawing at phone sizes
 
 The whole suite is also run at simulated times of day (night, morning, noon, evening), so no test depends on the real clock.
 
@@ -637,7 +643,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Saves in a per-user Nimlets folder, with a one-time copy of old saves | ✅ |
 | App icon drawn in code, with a multi-size .ico | ✅ |
 | First-time welcome tour and one-time hints for new players | ✅ |
-| Web version (browser, incl. phones) built with pygbag and published on GitHub Pages | ⚠️ Touch input done (v2.4); phone layout to come |
+| Web version (browser, incl. phones) built with pygbag and published on GitHub Pages | ✅ Touch (v2.4), portrait and wide phone layouts, sharp canvas (v2.5) |
 | Reciprocal intelligence: gestures, two-way imitation, 4 pet-led games, private language (4 levels), experiments on the player, repair, negotiation, boundaries, rituals, drawing together, player model | ✅ |
 | Shared Memories + Observation Lab + report export | ✅ |
 | Versioned releases + CHANGELOG | ✅ |
@@ -646,11 +652,12 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 218 passing |
+| Automated tests | ✅ 232 passing |
 
 ## Known limitations (honest notes)
 
 - **The web version can't be built in my own build environment** (pygbag fetches its browser runtime from the internet while building). Everything up to that point is tested, GitHub's machines do the full build, and it has been confirmed working in Chrome on a PC and a phone.
+- **The sharp phone canvas (v2.5) is tested with a stand-in browser, not a real phone.** If resizing the canvas ever fails in a real browser, the game logs it in the console and carries on at its old size (stretched and softer, as before v2.5), rather than risking a blank page.
 
 - **The handheld UI was checked in headless screenshots,** at sizes from 640×520 up to 1920×1080 and on every shell, light and dark, but not yet on a real Windows display.
 - **Pixel text only comes in whole sizes,** so it stays crisp. Where space is tight, some small labels (secondary hints, the smallest window size) drop to the smaller size rather than being cut off. *Smooth text* in Settings is there for anyone who prefers it.

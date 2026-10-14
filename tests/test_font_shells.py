@@ -102,7 +102,8 @@ class NewShellTests(unittest.TestCase):
 
 
 class EveryScreenTests(unittest.TestCase):
-    """Draws every screen in both text styles at three window sizes. Any crash fails."""
+    """Draws every screen in both text styles at desktop sizes and phone canvases
+    (portrait and on its side, v2.5). Any crash fails."""
 
     def test_every_screen_draws(self):
         from game.app import Game
@@ -121,7 +122,7 @@ class EveryScreenTests(unittest.TestCase):
             g.journal.add("note", "did something memorable.", g.world_time, important=True)
             for pixel in (True, False):
                 g.prefs["pixel_text"] = pixel
-                for size in ((640, 520), (960, 760), (1600, 900)):
+                for size in ((640, 520), (960, 760), (1600, 900), (585, 1266), (1266, 585), (390, 844)):
                     pygame.display.set_mode(size, pygame.RESIZABLE)
                     with self.subTest(pixel=pixel, size=size):
                         g.menu = g.panel = g.minigame = None

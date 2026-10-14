@@ -4,6 +4,39 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.5.0 "Pocket"
+
+The phone layout: the game now fits a phone held either way, and stays sharp.
+
+**Three layouts, chosen by the window's shape**
+- **Upright phones** get a new portrait layout:
+  - the room spans the width, with the hearts above it and the message line below;
+  - the eight tabs sit in a 4 × 2 grid under the room, with A/B/C and the utility buttons below them, all in thumb reach;
+  - each heart label sits above its hearts, so the hearts stay big;
+  - long messages wrap onto two lines instead of shrinking until they're hard to read.
+- **Phones on their side** get a new wide layout: the room in the middle with four tabs either side, the name above the left tabs and the clock above the right. On a typical phone the room is a third bigger than the classic device could manage there.
+- **Computers keep the classic handheld,** exactly as before.
+- **In the phone layouts the tabs press in when touched** and have rounded corners all round.
+
+**Settings → Screen**
+- **Auto** (the default) picks the layout that gives the biggest crisp room for the window's shape.
+- **Portrait** always uses the upright layout; on a wide window it stands in the middle, like a phone held in front of it.
+- **Landscape** uses whichever of the classic and wide layouts fits better.
+- **On narrow screens, Settings puts each label above its buttons,** so nothing overlaps.
+
+**Sharp on phones**
+- **The browser canvas now matches the phone's real pixels.** Before, the game always drew at 960 × 760 and the browser stretched that to fit, which made the pixel art soft on phones and squashed it into a landscape box when the phone was upright.
+- **When the full resolution would be too many pixels to draw smoothly, it uses exactly half,** so each game pixel covers 2 × 2 screen pixels. The browser is told to enlarge it without blurring.
+- **Turning the phone round re-sizes the canvas,** and the layout follows.
+- **Safety net:** if re-sizing the canvas ever fails, the game keeps its current canvas (softer, as before) instead of risking a blank page, and logs why in the browser console.
+
+**Other**
+- Escape trips stand on top of the tabs in the phone layouts, since the tabs have no outside edge there.
+- New `game/webscreen.py` works out the canvas size.
+
+**Tests**
+- 14 new tests (232 in total), and the "every screen draws" test now also runs at three phone sizes.
+
 ## v2.4.0 "Fingertips"
 
 The first part of touch support: the game now knows the difference between a mouse and a finger.

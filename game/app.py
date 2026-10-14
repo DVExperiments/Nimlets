@@ -466,6 +466,8 @@ class Game:
         import asyncio
         start, next_report = time.time(), 0.0
         while self.frame():
+            if self.frames % 15 == 0:
+                self.web_fit()                      # a phone turned round, or the window changed size
             if self.frames == 1:
                 weblog("[nimlets] first frame drawn")
             elapsed = time.time() - start
@@ -474,6 +476,32 @@ class Game:
                 next_report = 1.0
             await asyncio.sleep(0)
         self.finish()
+
+    def web_fit(self):
+        """Browser only: match the canvas to the window again after it changes shape (v2.5).
+
+        If replacing the canvas ever fails, stop trying and keep the current one: pygbag
+        still stretches it to fit, which is blurrier but always works."""
+        if not config.WEB or getattr(self, "web_fit_off", False):
+            return
+        from . import webscreen
+        want = webscreen.wanted_size()
+        if want is None or self.screen is None:
+            return
+        have = self.screen.get_size()
+        if abs(want[0] - have[0]) <= 2 and abs(want[1] - have[1]) <= 2:
+            return
+        try:
+            screen = pygame.display.set_mode(want, pygame.RESIZABLE)
+            if screen is None or screen.get_size() != tuple(want):
+                raise RuntimeError(f"asked for {want}, got {screen and screen.get_size()}")
+            self.screen = screen
+            webscreen.after_resize()
+            weblog(f"[nimlets] canvas {want[0]}x{want[1]}")
+        except Exception as exc:
+            self.web_fit_off = True
+            self.screen = pygame.display.get_surface() or self.screen
+            weblog(f"[nimlets] keeping the canvas at {have[0]}x{have[1]} ({exc})", error=True)
 
     def held(self):
         """Paused, or holding still while the welcome tour is open (without touching the saved pause)."""
@@ -1030,7 +1058,7 @@ class Game:
         if ev.type in (pygame.FINGERDOWN, pygame.FINGERUP, pygame.FINGERMOTION):
             return True                 # SDL also sends these as mouse events; act on those
         if ev.type == pygame.VIDEORESIZE:
-            if ev.w < MIN_W or ev.h < MIN_H:
+            if not config.WEB and (ev.w < MIN_W or ev.h < MIN_H):     # the browser sizes its own canvas
                 pygame.display.set_mode((max(MIN_W, ev.w), max(MIN_H, ev.h)), pygame.RESIZABLE)
         elif ev.type == getattr(pygame, "WINDOWFOCUSGAINED", -1):
             away = self.mind.away_t
@@ -1328,6 +1356,11 @@ class Game:
                 if hit.get("dark") and hit["dark"].collidepoint(pos):
                     self.set_pref("dark", True)
                     return
+                for rect, value in hit.get("screen_btns", ()):
+                    if rect.collidepoint(pos):
+                        self.set_pref("screen", value)      # v2.5: Auto / Portrait / Landscape
+                        self.audio.play("select")
+                        return
                 if hit.get("text_btn") and hit["text_btn"].collidepoint(pos):
                     self.set_pref("pixel_text", not self.prefs.get("pixel_text", True))
                     self.audio.play("select")
@@ -2028,7 +2061,7 @@ class Game:
     def draw(self):
         screen = pygame.display.get_surface()
         W, H = screen.get_size()
-        L = self.L = self.ui.layout(W, H)
+        L = self.L = self.ui.layout(W, H, self.prefs.get("screen", "auto"))
         c = self.c
         t = self.beh.anim_t
         self.ui.hit = {}
@@ -2159,7 +2192,11 @@ async def main_async(argv=None, error_frames=None):
         weblog("[nimlets] starting")
         pygame.init()
         if pygame.display.get_surface() is None:
-            pygame.display.set_mode((960, 760), pygame.RESIZABLE)
+            from . import webscreen                 # v2.5: the window's own shape and real pixels
+            size = webscreen.wanted_size() or (960, 760)
+            pygame.display.set_mode(size, pygame.RESIZABLE)
+            webscreen.after_resize()
+            weblog(f"[nimlets] canvas {size[0]}x{size[1]}")
         _web_screen(["Loading Nimlets...", "", "Hatching the code. This can take a little while the first time."])
         await asyncio.sleep(0)                      # let the browser show it before the heavy lifting
         game = Game(argv or [])

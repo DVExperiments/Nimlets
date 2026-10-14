@@ -267,12 +267,40 @@ class UI:
                   bold=True, align="center", maxw=rect.w - 12)
 
     # ---- layout -----------------------------------------------------------------------
-    def layout(self, W, H):
+    def layout(self, W, H, screen="auto"):
+        """Lay the device out for a W x H window (v2.5).
+
+        Three arrangements share the same pieces:
+          classic   the handheld (v1.7): tabs down both sides of the screen, A/B/C below;
+          portrait  for tall screens: the room across the full width, tabs in a 4 x 2 grid
+                    under it, then A/B/C and the utility buttons, all in thumb reach;
+          wide      for short, wide screens (a phone on its side): the room in the
+                    middle, a 2 x 2 block of tabs either side.
+        ``screen`` is the player's choice: "portrait", "landscape" (the better of
+        classic and wide) or "auto" (whichever gives the biggest crisp room; on a tie,
+        the one that suits the window's shape, and classic on desktop-shaped windows)."""
+        tall = H > W
+        if screen == "portrait":
+            order = ("portrait",)
+        elif screen == "landscape":
+            order = ("classic", "wide")
+        else:
+            # the wide layout is for phones on their side; desktop-shaped windows keep the classic look
+            order = ("portrait", "classic") if tall else (("classic", "wide") if W >= H * 1.9 else ("classic",))
+        best = None
+        for kind in order:
+            L = getattr(self, "_layout_" + kind)(W, H)
+            if L is not None and (best is None or L.scale > best.scale):
+                best = L
+        return best or self._layout_classic(W, H)       # classic always fits something
+
+    def _layout_classic(self, W, H):
         """The handheld device (v1.7): a decorated shell, the screen in the middle with
         action tabs down both sides, hearts above, a message line below, and the
         A/B/C buttons flanked by the utility buttons along the bottom."""
         L = Layout()
         L.W, L.H = W, H
+        L.kind, L.tab_style = "classic", "side"
         m = max(8, int(min(W, H) * 0.015))
         sw = min(W - 2 * m, int((H - 2 * m) * 1.35))
         sh = min(H - 2 * m, int(sw / 1.05))
@@ -362,6 +390,189 @@ class UI:
         L.controls = pygame.Rect(L.shell.centerx - total // 2, y, total, b)
         return L
 
+    # -- shared pieces for the phone layouts --
+    @staticmethod
+    def _phone_shell(L, W, H, m):
+        L.W, L.H = W, H
+        L.shell = pygame.Rect(m, m, W - 2 * m, H - 2 * m)
+        r = max(12, int(min(L.shell.w, L.shell.h) * 0.07))
+        L.radii = (r, max(10, int(r * 0.8)))
+
+    @staticmethod
+    def _grid(rect, cols, rows, gap):
+        """Equal cells filling ``rect``, row by row."""
+        cw = (rect.w - (cols - 1) * gap) / cols
+        ch = (rect.h - (rows - 1) * gap) / rows
+        return [pygame.Rect(int(rect.x + c * (cw + gap)), int(rect.y + r * (ch + gap)), int(cw), int(ch))
+                for r in range(rows) for c in range(cols)]
+
+    @staticmethod
+    def _row(cx, cy, sizes, gap):
+        """Square buttons of the given sizes, centred on (cx, cy) in a row."""
+        total = sum(sizes) + gap * (len(sizes) - 1)
+        x, out = cx - total // 2, []
+        for d in sizes:
+            out.append(pygame.Rect(x, cy - d // 2, d, d))
+            x += d + gap
+        return out
+
+    def _layout_portrait(self, W, H):
+        """Tall screens: name and clock, hearts, the room edge to edge, the message line,
+        the eight tabs in a 4 x 2 grid, then A/B/C and the four utility buttons.
+        On a window wider than a phone (Portrait chosen in Settings), it stands upright
+        in the middle, like a phone held in front of the window."""
+        if W > H * 0.62:
+            L = self._layout_portrait(int(H * 0.6), H)
+            if L is None:
+                return None
+            dx = (W - L.W) // 2
+            for name in ("shell", "top", "hearts_rect", "bezel", "lcd", "msg", "controls"):
+                setattr(L, name, getattr(L, name).move(dx, 0))
+            L.buttons = [r.move(dx, 0) for r in L.buttons]
+            L.abc = {k: r.move(dx, 0) for k, r in L.abc.items()}
+            L.toggles = {k: r.move(dx, 0) for k, r in L.toggles.items()}
+            L.W = W
+            return L
+        L = Layout()
+        L.kind, L.tab_style = "portrait", "grid"
+        m = max(4, int(W * 0.012))
+        self._phone_shell(L, W, H, m)
+        sw, sh = L.shell.size
+        L.fs = fs = max(13, min(24, int(sw * 0.036)))
+        side = max(8, int(sw * 0.03))
+        inner_w = sw - 2 * side
+        pad = max(4, int(sw * 0.008))
+        g = max(5, int(sh * 0.008))
+        # labels sit above the hearts, and messages may take two lines, so both are taller
+        name_h, hearts_h, msg_h = fs + 14, int(fs * 2.2) + 12, int(fs * 2.7) + 8
+        L.stack_hearts = True
+        pad_top = max(10, int(L.radii[0] * 0.45))
+        pad_bottom = max(12, int(L.radii[1] * 0.5))
+        tab_min = max(56, int(inner_w * 0.19))
+        b_min = max(48, int(inner_w * 0.13))
+        u_min = max(40, int(inner_w * 0.10))
+        tg = max(6, int(inner_w * 0.02))
+        fixed = (pad_top + name_h + hearts_h + msg_h + 2 * tab_min + tg + b_min + u_min
+                 + 7 * g + pad_bottom + 2 * pad)
+        for scale in range(10, 0, -1):
+            if LCD_W * scale + 2 * pad <= sw - 4 and fixed + LCD_H * scale <= sh:
+                break
+        else:
+            return None
+        if LCD_W * scale + 2 * pad > sw - 4 or fixed + LCD_H * scale > sh:
+            return None
+        L.scale = scale
+        L.lcd = pygame.Rect(0, 0, LCD_W * scale, LCD_H * scale)
+        bez_w, bez_h = L.lcd.w + 2 * pad, L.lcd.h + 2 * pad
+        extra = sh - (fixed + L.lcd.h)
+        tab_h = min(tab_min + int(extra * 0.25), max(tab_min, int(inner_w * 0.28)))
+        extra -= 2 * (tab_h - tab_min)
+        b = min(b_min + int(extra * 0.3), max(b_min, int(inner_w * 0.19)))
+        extra -= b - b_min
+        u = min(u_min + int(extra * 0.3), max(u_min, int(inner_w * 0.13)))
+        extra -= u - u_min
+        grow = min(extra // 4, fs)                     # a little more room for hearts and messages
+        hearts_h += grow // 2
+        msg_h += grow // 2
+        extra -= grow
+        g += min(extra // 10, g)                       # then breathing room, and centre the rest
+        used = (pad_top + name_h + hearts_h + bez_h + msg_h + 2 * tab_h + tg + b + u + 7 * g + pad_bottom)
+        y = L.shell.y + pad_top + max(0, sh - used) // 2
+        L.tab_w = (inner_w - 3 * tg) // 4
+        L.top = pygame.Rect(L.shell.x + side, y, inner_w, name_h)
+        y += name_h + g
+        L.hearts_rect = pygame.Rect(0, y, bez_w, hearts_h)
+        L.hearts_rect.centerx = L.shell.centerx
+        y += hearts_h + g
+        L.bezel = pygame.Rect(0, y, bez_w, bez_h)
+        L.bezel.centerx = L.shell.centerx
+        L.lcd.center = L.bezel.center
+        y += bez_h + g
+        L.msg = pygame.Rect(0, y, bez_w, msg_h)
+        L.msg.centerx = L.shell.centerx
+        y += msg_h + 2 * g
+        L.buttons = self._grid(pygame.Rect(L.shell.x + side, y, inner_w, 2 * tab_h + tg), 4, 2, tg)
+        y += 2 * tab_h + tg + 2 * g
+        a = int(b * 0.85)
+        L.abc = dict(zip("abc", self._row(L.shell.centerx, y + b // 2, (a, b, a), int(b * 0.5))))
+        y += b + g
+        L.toggles = dict(zip(("settings", "sound", "speed", "pause"),
+                             self._row(L.shell.centerx, y + u // 2, (u,) * 4, int(u * 0.6))))
+        L.controls = L.abc["a"].unionall([L.abc["c"], L.toggles["settings"], L.toggles["pause"]])
+        return L
+
+    def _layout_wide(self, W, H):
+        """Short, wide screens (a phone on its side): hearts over the room in the middle,
+        with a 2 x 2 block of tabs on each side, the name over the left block and the
+        clock over the right. The utility buttons sit under the left tabs, A/B/C under
+        the right ones, ending level with the message line, so the room alone sets the height."""
+        if W < H * 1.3:
+            return None
+        L = Layout()
+        L.kind, L.tab_style = "wide", "grid"
+        m = max(4, int(H * 0.012))
+        self._phone_shell(L, W, H, m)
+        sw, sh = L.shell.size
+        L.fs = fs = max(13, min(22, int(sh * 0.036)))
+        side = max(10, int(L.radii[0] * 0.5))
+        pad = max(4, int(sh * 0.008))
+        g = max(5, int(sh * 0.012))
+        gc = max(10, int(sw * 0.012))                 # gap between the columns
+        row1 = max(fs + 14, fs + 16)
+        msg_h = int(fs * 1.9) + 4
+        u_min, b_min = max(36, int(sh * 0.09)), max(40, int(sh * 0.11))
+        ctrl_h = max(u_min, b_min)
+        col_min = max(4 * u_min + 3 * 6, 3 * b_min + 2 * 8, 2 * 64 + 8)
+        pad_top = max(8, int(L.radii[0] * 0.35))
+        pad_bottom = max(10, int(L.radii[1] * 0.4))
+        for scale in range(10, 0, -1):
+            cw = LCD_W * scale + 2 * pad
+            colw = (sw - 2 * side - cw - 2 * gc) // 2
+            need_h = pad_top + row1 + g + LCD_H * scale + 2 * pad + g + msg_h + pad_bottom
+            tabs_h = LCD_H * scale + 2 * pad + g + msg_h - ctrl_h - g
+            if colw >= col_min and need_h <= sh and tabs_h >= 2 * 48 + 8:
+                break
+        else:
+            return None
+        if colw < col_min or need_h > sh or tabs_h < 2 * 48 + 8:
+            return None
+        L.scale = scale
+        L.lcd = pygame.Rect(0, 0, LCD_W * scale, LCD_H * scale)
+        bez_w, bez_h = L.lcd.w + 2 * pad, L.lcd.h + 2 * pad
+        extra = sh - need_h
+        grow = min(extra // 3, fs)
+        msg_h += grow // 2
+        row1 += grow // 2
+        extra -= grow
+        y0 = L.shell.y + pad_top + extra // 2
+        cx = L.shell.centerx
+        lx = cx - bez_w // 2 - gc - colw
+        rx = cx + bez_w // 2 + gc
+        L.tab_w = colw
+        L.top = pygame.Rect(lx, y0, rx + colw - lx, row1)
+        L.name_box = pygame.Rect(lx, y0, colw, row1)
+        L.clock_box = pygame.Rect(rx, y0, colw, row1)
+        L.hearts_rect = pygame.Rect(0, y0, bez_w, row1)
+        L.hearts_rect.centerx = cx
+        L.bezel = pygame.Rect(0, y0 + row1 + g, bez_w, bez_h)
+        L.bezel.centerx = cx
+        L.lcd.center = L.bezel.center
+        L.msg = pygame.Rect(0, L.bezel.bottom + g, bez_w, msg_h)
+        L.msg.centerx = cx
+        tg = max(6, int(colw * 0.04))
+        u = min(u_min + extra // 6, (colw - 3 * 6) // 4, int(sh * 0.14))
+        b = min(b_min + extra // 6, (colw - 2 * 8) // 3, int(sh * 0.16))
+        ctrl_h = max(u, b)
+        cy = L.msg.bottom - ctrl_h // 2                # the controls end level with the message line
+        tabs = pygame.Rect(0, L.bezel.y, colw, cy - ctrl_h // 2 - g - L.bezel.y)
+        L.buttons = (self._grid(tabs.move(lx, 0), 2, 2, tg) + self._grid(tabs.move(rx, 0), 2, 2, tg))
+        L.toggles = dict(zip(("settings", "sound", "speed", "pause"),
+                             self._row(lx + colw // 2, cy, (u,) * 4, max(6, (colw - 4 * u) // 4))))
+        a = int(b * 0.9)
+        L.abc = dict(zip("abc", self._row(rx + colw // 2, cy, (a, b, a), max(8, (colw - 2 * a - b) // 3))))
+        L.controls = L.toggles["settings"].unionall([L.toggles["pause"], L.abc["a"], L.abc["c"]])
+        return L
+
     def set_shell(self, sid, hue, dark):
         self.shell_id, self.shell_hue, self.shell_dark = sid, hue, dark
 
@@ -398,10 +609,13 @@ class UI:
         # name plate, centred, with the attention light to its left
         label = f"{info['name']}  \u00b7  {info['subtitle'].replace('  -  ', '  \u00b7  ')}".upper()
         f = self.font(fs - 1, True)
-        maxw = int(L.top.w * 0.62)
+        box = getattr(L, "name_box", None) or L.top        # the wide layout gives the name its own corner
+        maxw = int(L.top.w * 0.62) if box is L.top else box.w - L.top.h - 40
         tw = min(maxw, f.size(label)[0])
         plate = pygame.Rect(0, 0, tw + 28, L.top.h)
-        plate.center = L.top.center
+        plate.center = box.center
+        if box is not L.top:
+            plate.centerx += (L.top.h + 4) // 2           # leave room for the attention light
         pygame.draw.rect(screen, pal["plate"], plate, border_radius=L.top.h // 2)
         self.text(screen, label, (plate.centerx, plate.y + (plate.h - fs) // 2 - 2), fs - 1, PLATE_INK, bold=True,
                   align="center", maxw=maxw)
@@ -419,10 +633,16 @@ class UI:
         # clock on the right of the same row
         f2 = self.font(fs - 3, True)
         clock = f"{info['age']}  \u00b7  {info['clock']}"
-        if f2.size(clock)[0] + 20 > L.top.right - plate.right - 16:
+        cbox = getattr(L, "clock_box", None)
+        room = cbox.w if cbox else L.top.right - plate.right - 16
+        if f2.size(clock)[0] + 20 > room:
             clock = info["clock"].split()[-1]
         cw = f2.size(clock)[0] + 20
-        pill = pygame.Rect(L.top.right - cw, L.top.y + 3, cw, L.top.h - 6)
+        if cbox:
+            pill = pygame.Rect(0, L.top.y + 3, cw, L.top.h - 6)
+            pill.centerx = cbox.centerx
+        else:
+            pill = pygame.Rect(L.top.right - cw, L.top.y + 3, cw, L.top.h - 6)
         pygame.draw.rect(screen, pal["plate"], pill, border_radius=pill.h // 2)
         self.text(screen, clock, (pill.centerx, pill.y + (pill.h - fs + 3) // 2 - 2), fs - 3, PLATE_INK,
                   bold=True, align="center")
@@ -435,6 +655,22 @@ class UI:
             rows = (("HUNGER", info["hunger"], HEART_RED), ("HAPPY", info["happy"], (240, 110, 170)),
                     ("HEALTH", info["health"], (90, 210, 150)))
             sec = hr.w // 3
+            if getattr(L, "stack_hearts", False):          # portrait: each label above its hearts
+                lsz = fs - 3 if getattr(self, "pixel", False) else fs - 5
+                lf = self.font(lsz, True)
+                sc = max(1, min(3, (sec - 16) // (slots * 8)))
+                block = lf.get_height() + 4 + 6 * sc
+                top = hr.centery - block // 2
+                for i, (name, n, col) in enumerate(rows):
+                    x0 = hr.x + i * sec
+                    if i:
+                        pygame.draw.line(screen, STRIP_LINE, (x0, hr.y + 6), (x0, hr.bottom - 6), 2)
+                    self.text(screen, name, (x0 + sec // 2, top - 1), lsz, PLATE_INK, bold=True, align="center")
+                    hw = slots * 8 * sc
+                    self.hearts(screen, x0 + (sec - hw) // 2, top + lf.get_height() + 4, n, sc, slots, col,
+                                info.get("poke", 0.0), empty=STRIP_EMPTY)
+                self.draw_controls(screen, L, info, pal)
+                return
             # hearts matter more than their labels: keep the hearts big, shrink the labels if needed
             lsz = fs - 3 if getattr(self, "pixel", False) else fs - 5
             while lsz > 9:
@@ -504,15 +740,22 @@ class UI:
         for i, rect in enumerate(L.buttons):
             name = ACTION_IDS[i]
             off = name in disabled
+            grid = getattr(L, "tab_style", "side") == "grid"
             left = i < 4
             col = TAB_COLORS[name]
             if off:
                 col = tuple(int(v * 0.55 + 200 * 0.45) for v in col)
             elif hover == i:
                 col = _lighten(col, 16)
-            r = rect.move(-3 if left else 3, 0) if hover == i and not off else rect
-            corners = (dict(border_top_left_radius=14, border_bottom_left_radius=14) if left
-                       else dict(border_top_right_radius=14, border_bottom_right_radius=14))
+            if grid:                                     # phone layouts: tabs press in, all corners round
+                r = rect.move(0, 3) if hover == i and not off else rect
+                corners = dict(border_radius=max(10, min(r.w, r.h) // 6))
+            else:
+                r = rect.move(-3 if left else 3, 0) if hover == i and not off else rect
+                corners = (dict(border_top_left_radius=14, border_bottom_left_radius=14) if left
+                           else dict(border_top_right_radius=14, border_bottom_right_radius=14))
+            if grid and not (hover == i and not off):  # a little lip under each grid tab
+                pygame.draw.rect(screen, tuple(max(0, v - 45) for v in col), r.move(0, 3), **corners)
             pygame.draw.rect(screen, col, r, **corners)
             if selected == i:
                 pygame.draw.rect(screen, SCREEN_DARK, r, 3, **corners)
@@ -528,12 +771,13 @@ class UI:
             screen.blit(img, img.get_rect(midtop=(r.centerx, top)))
             self.text(screen, label, (r.centerx, top + img.get_height() + 2), lsz,
                       SCREEN_DARK if not off else (110, 104, 120), bold=True, align="center", maxw=r.w - 6)
-            self.text(screen, str(i + 1), (r.x + (8 if left else r.w - 8), r.y + 4), max(9, fs - 7), SCREEN_DARK,
-                      align="left" if left else "right")
+            num_left = left or grid
+            self.text(screen, str(i + 1), (r.x + (8 if num_left else r.w - 8), r.y + 4), max(9, fs - 7), SCREEN_DARK,
+                      align="left" if num_left else "right")
             if flash == name:
                 pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() / 140)
                 pygame.draw.rect(screen, (229, 72, 77), r, 3, **corners)
-                pygame.draw.circle(screen, (229, 72, 77), (r.x + (r.w - 12 if left else 12), r.y + 12),
+                pygame.draw.circle(screen, (229, 72, 77), (r.x + (r.w - 12 if num_left else 12), r.y + 12),
                                    int(5 + 2 * pulse))
 
     def draw_message(self, screen, L, text, alpha):
@@ -543,8 +787,25 @@ class UI:
         if not text or alpha <= 0:
             return
         size = L.fs
-        while size > 9 and self.font(size, True).size(text)[0] > L.msg.w - 24:
+        maxw = L.msg.w - 24
+        while size > L.fs - 4 and self.font(size, True).size(text)[0] > maxw:
             size -= 1
+        if self.font(size, True).size(text)[0] > maxw:
+            # v2.5: rather than shrinking a long message until it's hard to read, use two lines if they fit
+            for size2 in range(L.fs, max(9, L.fs - 6) - 1, -1):
+                f2 = self.font(size2, True)
+                lh = f2.get_height() + 2
+                lines = self.wrap(text, size2, maxw, bold=True)
+                if 2 * lh <= L.msg.h - 6 and len(lines) <= 2 and all(f2.size(ln)[0] <= maxw for ln in lines):
+                    y = L.msg.centery + 1 - lh * len(lines) // 2
+                    for ln in lines:
+                        img = f2.render(ln, True, MSG_INK)
+                        img.set_alpha(int(alpha * 255))
+                        screen.blit(img, img.get_rect(midtop=(L.msg.centerx, y)))
+                        y += lh
+                    return
+            while size > 9 and self.font(size, True).size(text)[0] > maxw:
+                size -= 1
         img = self.font(size, True).render(text, True, MSG_INK)
         if img.get_width() > L.msg.w - 24:          # still too long: squash it (smooth text only)
             scale = pygame.transform.scale if getattr(self, "pixel", False) else pygame.transform.smoothscale
@@ -1154,19 +1415,31 @@ class UI:
             sx += step
         y += size + fs + (22 if rect.h > 520 else 12)
 
-        # light / dark
-        self.text(screen, "Appearance", (x, y + 6), fs + 1, t.ink, bold=True)
         lf = self.font(fs + 1, True)
-        bx = x + max(int(fs * 9), max(lf.size(n)[0] for n in ("Appearance", "Shell", "Wandering",
+        bx = x + max(int(fs * 9), max(lf.size(n)[0] for n in ("Appearance", "Shell", "Screen", "Wandering",
                                                                    "Experiments", "Reset")) + 18)
         bw = max(fs * 5, 90)
+        # v2.5: a narrow panel (a phone held upright) puts each label above its buttons
+        narrow = bx + 3 * bw + 60 > rect.right - 20
+        if narrow:
+            bx = x
+            gap = fs + 22
+
+        def heading(name):
+            nonlocal y
+            self.text(screen, name, (x, y + 6), fs + 1, t.ink, bold=True)
+            if narrow:
+                y += fs + 16
+
+        # light / dark
+        heading("Appearance")
         light = pygame.Rect(bx, y, bw, fs + 18)
         dark = pygame.Rect(bx + bw + 10, y, bw, fs + 18)
         self.pill_button(screen, light, "Light", fs - 1, on=not prefs.get("dark"))
         self.pill_button(screen, dark, "Dark", fs - 1, on=bool(prefs.get("dark")))
         self.hit["light"], self.hit["dark"] = light, dark
         pix = prefs.get("pixel_text", True)
-        tb = pygame.Rect(dark.right + 24, y, int(bw * 1.5), fs + 18)
+        tb = pygame.Rect(dark.right + (10 if narrow else 24), y, int(bw * 1.5), fs + 18)
         if tb.right > rect.right - 20:
             tb.x = rect.right - 20 - tb.w
         self.pill_button(screen, tb, "Pixel text" if pix else "Smooth text", fs - 1, on=pix)
@@ -1174,28 +1447,46 @@ class UI:
         y += gap
 
         # shell (sound now has its own button on the device, or M)
-        self.text(screen, "Shell", (x, y + 6), fs + 1, t.ink, bold=True)
+        heading("Shell")
         shl = pygame.Rect(bx, y, bw * 2 + 10, fs + 18)
         self.pill_button(screen, shl, "<   " + prefs.get("_shell_label", "Match my pet") + "   >", fs - 1, on=True)
         self.hit["shell_btn"] = shl
-        if shl.right + 20 < rect.right - 200:
+        if narrow:
+            y += fs + 22
+            self.text(screen, prefs.get("_shell_hint", ""), (x, y - 2), fs - 4, t.ink_soft, maxw=rect.right - x - 20)
+        elif shl.right + 20 < rect.right - 200:
             self.text(screen, prefs.get("_shell_hint", ""), (shl.right + 14, y + 8), fs - 4, t.ink_soft,
                       maxw=rect.right - shl.right - 40)
         y += gap
 
+        # screen: which way round the device is laid out (v2.5)
+        heading("Screen")
+        choice = prefs.get("screen", "auto")
+        self.hit["screen_btns"] = []
+        sbw = max(bw, max(self.font(fs - 1, True).size(n)[0] for n in ("Portrait", "Landscape")) + 26)
+        if bx + 3 * sbw + 20 > rect.right - 20:
+            sbw = max(60, (rect.right - 20 - bx - 20) // 3)
+        sx = bx
+        for value, name in (("auto", "Auto"), ("portrait", "Portrait"), ("landscape", "Landscape")):
+            r = pygame.Rect(sx, y, sbw, fs + 18)
+            self.pill_button(screen, r, name, fs - 1, on=choice == value)
+            self.hit["screen_btns"].append((r, value))
+            sx += sbw + 10
+        y += gap
+
         # wandering: may the pet take long walks around the whole device?
-        self.text(screen, "Wandering", (x, y + 6), fs + 1, t.ink, bold=True)
+        heading("Wandering")
         roam = pygame.Rect(bx, y, bw * 2 + 10, fs + 18)
         on = prefs.get("wander", True)
         self.pill_button(screen, roam, "Allowed" if on else "Not allowed", fs - 1, on=on)
         self.hit["roam_btn"] = roam
-        if roam.right + 20 < rect.right - 200:
+        if not narrow and roam.right + 20 < rect.right - 200:
             self.text(screen, "Lets your pet explore the whole device now and then.",
                       (roam.right + 14, y + 8), fs - 4, t.ink_soft, maxw=rect.right - roam.right - 40)
         y += gap
 
         # experimental behaviours, the mirror, observation mode
-        self.text(screen, "Experiments", (x, y + 6), fs + 1, t.ink, bold=True)
+        heading("Experiments")
         ex_l = "Unusual: on" if prefs.get("experimental", True) else "Unusual: off"
         mi_l = "Mirror: on" if prefs.get("mirror") else "Mirror: off"
         for esz in (fs - 1, fs - 3):                    # same size as the other buttons, if the row fits
@@ -1206,6 +1497,9 @@ class UI:
             ob = pygame.Rect(mi.right + 10, y, fit("Observation (F9)", int(bw * 1.4)), fs + 18)
             if ob.right <= rect.right - 20:
                 break
+        if ob.right > rect.right - 20:                 # still too wide: Observation on a line of its own
+            ob = pygame.Rect(bx, y + fs + 26, ob.w, ob.h)
+            y += fs + 26
         self.pill_button(screen, ex, ex_l, esz, on=prefs.get("experimental", True))
         self.pill_button(screen, mi, mi_l, esz, on=bool(prefs.get("mirror")))
         self.pill_button(screen, ob, "Observation (F9)", esz)
@@ -1215,7 +1509,7 @@ class UI:
         # reset
         pygame.draw.line(screen, t.panel_alt, (x, y), (rect.right - 28, y), 2)
         y += 14
-        self.text(screen, "Reset", (x, y + 6), fs + 1, t.ink, bold=True)
+        heading("Reset")
         rw = max(fs * 11, 200, self.font(fs - 1, True).size("New egg (keep records)")[0] + 28)
         soft = pygame.Rect(bx, y, rw, fs + 18)
         hard = pygame.Rect(bx + rw + 10, y, rw, fs + 18)
@@ -1228,6 +1522,9 @@ class UI:
         if hint_y < rect.bottom - fs * 3 and rect.h > 520:
             fb = pygame.Rect(0, 0, self.font(fs - 2, True).size("Open folder")[0] + 28, fs + 14)
             fb.topright = (rect.right - 22, y - 4)
+            if narrow:                                  # under the reset buttons, not beside them
+                fb.topright = (rect.right - 22, hint_y)
+                hint_y = fb.bottom + 14
             if prefs.get("_web"):                   # no folders in a browser: keep the tour button's place
                 fb.w = 0
                 fb.right = rect.right - 12
@@ -1241,9 +1538,10 @@ class UI:
             self.hit["tour_btn"] = tb
             self.text(screen, "Your pet is saved in this browser." if prefs.get("_web") else
                       "Saves, backups and exported reports live in your Nimlets folder.",
-                      (x, hint_y), fs - 4, t.ink_soft)
-        self.text(screen, "Keys: O settings, Left/Right theme, D dark mode, Esc close",
-                  (rect.centerx, rect.bottom - fs - 10), fs - 4, t.ink_soft, align="center")
+                      (x, hint_y), fs - 4, t.ink_soft, maxw=rect.right - x - 20)
+        keys = "Keys: O settings, Left/Right theme, D dark mode, Esc close"
+        if not narrow and self.font(fs - 4).size(keys)[0] < rect.w - 160:
+            self.text(screen, keys, (rect.centerx, rect.bottom - fs - 10), fs - 4, t.ink_soft, align="center")
         if prefs.get("_version"):
             self.text(screen, f"v{prefs['_version']}", (rect.right - 20, rect.bottom - fs - 10), fs - 4,
                       t.ink_soft, align="right")

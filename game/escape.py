@@ -126,6 +126,8 @@ class Trip:
             return (r.centerx, r.top + 3)
         if name == "tabside":                      # on the shell, just outside a column of tabs
             r = L.buttons[frac]
+            if getattr(L, "tab_style", "side") == "grid":   # phone layouts: no outside edge, so on top
+                return (r.centerx, r.top + 3)
             side = -1 if frac < 4 else 1
             return ((r.left if side < 0 else r.right) + side * 16, r.bottom - 2)
         if name == "inside":
