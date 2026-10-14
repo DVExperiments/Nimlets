@@ -4,6 +4,17 @@ All notable changes to Nimlets (formerly "Tamagotchi Reimagined" / "Pocket Pal")
 Versions follow `MAJOR.MINOR.PATCH`: MINOR for new features, PATCH for fixes.
 Each release is packaged as `nimlets_vX.Y.Z.zip` and published as a GitHub Release.
 
+## v2.2.3 "Web Ready" (fix)
+
+**The web version stalled right after starting `main.py`**
+- **The browser's console showed `main.py` starting, then nothing more.** The stall was between `main.py` and the game's own code.
+- **`main.py` now follows pygbag's standard shape:** an `async def main()` with `asyncio.run(main())` as its last line, the form pygbag looks for. Before, a variation of it was tucked inside an `if` block.
+- **If the game's code fails to load in the browser,** the error is shown on screen and in the console, using only pygame's built-in font so it works even if the game's own code can't load.
+- **The desktop game and the .exe start exactly as before** (rebuilt and smoke-tested).
+
+**Tests**
+- 2 new tests (206 in total): `main.py` keeps pygbag's standard shape and does nothing when merely imported, and a failure loading the game's code is reported and drawn.
+
 ## v2.2.2 "Web Ready" (fix)
 
 **The web version showed "Loading Nimlets..." and then went grey**

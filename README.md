@@ -1,6 +1,6 @@
 # Nimlets
 
-**Version 2.2.2 "Web Ready"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
+**Version 2.2.3 "Web Ready"** - see [CHANGELOG.md](CHANGELOG.md) for the full history. Releases are packaged as `nimlets_vX.Y.Z.zip` and published as GitHub Releases; the version is also shown in the window title and at the bottom of Settings.
 
 A small, charming virtual-pet game in Python + pygame-ce. Hatch an egg, care for one little creature in short sessions, and watch it grow into one of 28 forms across two family trees (including 4 secret ones) depending on how you raise it. When it is grown, it leaves an egg behind and the next generation begins.
 
@@ -496,7 +496,7 @@ New creature forms can be added in `config/species.json` by combining existing b
 python -m unittest discover -s tests -v
 ```
 
-The 204 tests cover:
+The 206 tests cover:
 
 - needs decay and the hearts display
 - feeding and refusal
@@ -641,7 +641,7 @@ python main.py --smoke-test 300 --screenshot shot.png --save saves/smoke.json
 | Coins for winning games; shop of 12 one-time treats/toys; per-pet tastes, learned preferences and reactions | ✅ |
 | Interactive room objects (plant, window, lamp, clock, picture, bowl, bed, pumpkin, mirror) | ✅ |
 | Wall cleaning (sponge or wipe-all) that the pet learns from, by freshness | ✅ |
-| Automated tests | ✅ 204 passing |
+| Automated tests | ✅ 206 passing |
 
 ## Known limitations (honest notes)
 

@@ -134,9 +134,47 @@ class WebStartupTests(unittest.TestCase):
 
         with open(os.path.join(ROOT, "main.py"), encoding="utf-8") as f:
             code = compile(f.read(), "main.py", "exec")
-        with mock.patch.object(sys, "platform", "emscripten"), mock.patch.object(app, "main_async", fake_main):
+        with mock.patch.object(sys, "platform", "emscripten"), mock.patch.object(app, "main_async", fake_main), \
+                mock.patch("builtins.print"):
             exec(code, {"__name__": "__main__"})                 # note: no __file__ here
         self.assertEqual(started, [[]])
+
+    def test_main_py_has_pygbags_standard_shape_and_does_nothing_when_imported(self):
+        with open(os.path.join(ROOT, "main.py"), encoding="utf-8") as f:
+            src = f.read()
+        self.assertIn("async def main():", src)
+        self.assertTrue(src.rstrip().endswith("asyncio.run(main())"))            # pygbag looks for this
+        code = compile(src, "main.py", "exec")
+        import game.app as app
+        with mock.patch.object(app, "main", lambda *a: self.fail("started on import")):
+            exec(code, {"__name__": "main"})                                     # imported, not run
+
+    def test_a_failure_loading_the_game_code_is_shown(self):
+        with open(os.path.join(ROOT, "main.py"), encoding="utf-8") as f:
+            code = compile(f.read(), "main.py", "exec")
+        import builtins
+        real_import = builtins.__import__
+        shown = []
+
+        def broken_import(name, *a, **k):
+            if name == "game.app":
+                raise ImportError("pretend the game's code is broken")
+            return real_import(name, *a, **k)
+
+        async def fast_sleep(*a):
+            raise asyncio.CancelledError                 # stop the "keep it on screen" loop at once
+
+        g = {"__name__": "__main__"}
+        with mock.patch.object(sys, "platform", "emscripten"), mock.patch("builtins.__import__", broken_import), \
+                mock.patch("builtins.print", lambda *a, **k: shown.append(a)), \
+                mock.patch("asyncio.sleep", fast_sleep):
+            with self.assertRaises(asyncio.CancelledError):
+                exec(code, g)
+        self.assertTrue(any("[nimlets] the game" in str(a) and "code" in str(a) for a in shown), shown)
+        screen = pygame.display.get_surface()
+        self.assertIsNotNone(screen)
+        self.assertEqual(screen.get_at((2, 2))[:3], (43, 34, 64))               # the error page, not grey
+        pygame.quit()
 
     def test_a_startup_crash_is_shown_on_screen(self):
         import game.app as app
